@@ -2,25 +2,41 @@
 const Configuration = require('../models/Configuration');
 const User = require('../models/User');
 const Information = require('../models/Information');
-const { log } = require('../config/logger'); // Custom logger
+const { log } = require('../config/logger');
 const bcrypt = require('bcrypt');
+
+// Utility function for centralized error handling
+function handleError(error, res, customMessage) {
+    log.error(`${customMessage}: ${error.message}`);
+    res.status(500).render('error', { error: customMessage });
+}
 
 // Render admin dashboard with configurations, users, and information list
 async function renderAdminPanel(req, res) {
     try {
         log.info(`User ${req.session.user.username} accessed admin dashboard`);
-        const configurations = await Configuration.findAll({raw: true});
-        const users = await User.findAll({raw: true});
-        const information = await Information.findAll({raw: true}); // Get all Information records
 
-        res.render('adminPanel', { configurations, users, information, successMessage: req.session.successMessage, errorMessage: req.session.errorMessage});
-        req.session.successMessage = undefined
-        req.session.errorMessage = undefined
-        
-        log.info(`Admin dashboard accessed by ${req.session.user.username}`);
+        const [configurations, users, information] = await Promise.all([
+            Configuration.findAll(),
+            User.findAll(),
+            Information.findAll()
+        ]);
+
+        res.render('adminPanel', { 
+            configurations, 
+            users, 
+            information, 
+            successMessage: req.session.successMessage, 
+            errorMessage: req.session.errorMessage 
+        });
+
+        // Clear session messages after rendering
+        req.session.successMessage = undefined;
+        req.session.errorMessage = undefined;
+
+        log.info(`Admin dashboard successfully loaded for ${req.session.user.username}`);
     } catch (error) {
-        log.error(`Error loading admin dashboard: ${error.message}`);
-        res.status(500).render('error', { error: 'Failed to load admin dashboard' });
+        handleError(error, res, 'Failed to load admin dashboard');
     }
 }
 
@@ -29,19 +45,16 @@ async function updateInformation(req, res) {
     const { uuid, value } = req.body;
     try {
         const info = await Information.findByPk(uuid);
-        if (info) {
-            info.value = value;
-            await info.save();
-            log.info(`Information ${info.name} updated by ${req.session.user.username}`);
+        if (!info) throw new Error('Information not found');
 
-            req.session.successMessage = "Information updated successfully!"
-            res.redirect('/admin');
-        } else {
-            throw new Error('Information not found');
-        }
+        info.value = value;
+        await info.save();
+
+        log.info(`Information ${info.name} updated by ${req.session.user.username}`);
+        req.session.successMessage = "Information updated successfully!";
+        res.redirect('/admin');
     } catch (error) {
-        log.error(`Failed to update information: ${error.message}`);
-        res.status(500).render('error', { error: 'Failed to update information' });
+        handleError(error, res, 'Failed to update information');
     }
 }
 
@@ -50,18 +63,16 @@ async function updateConfiguration(req, res) {
     const { uuid, value } = req.body;
     try {
         const config = await Configuration.findByPk(uuid);
-        if (config) {
-            config.value = value;
-            await config.save();
-            log.info(`Configuration ${config.name} updated by ${req.session.user.username}`);
-            req.session.successMessage = `Configuration '${config.name}'  updated successfully!`
-            res.redirect('/admin');
-        } else {
-            throw new Error('Configuration not found');
-        }
+        if (!config) throw new Error('Configuration not found');
+
+        config.value = value;
+        await config.save();
+
+        log.info(`Configuration ${config.name} updated by ${req.session.user.username}`);
+        req.session.successMessage = `Configuration '${config.name}' updated successfully!`;
+        res.redirect('/admin');
     } catch (error) {
-        log.error(`Failed to update configuration: ${error.message}`);
-        res.status(500).render('error', { error: 'Failed to update configuration' });
+        handleError(error, res, 'Failed to update configuration');
     }
 }
 
@@ -69,17 +80,27 @@ async function updateConfiguration(req, res) {
 async function editOrAddUser(req, res) {
     const { uuid, username, email, is_admin, password } = req.body;
     try {
-        const user = uuid ? await User.findByPk(uuid) : User.build();
+        let user;
+        if (uuid) {
+            user = await User.findByPk(uuid);
+            if (!user) throw new Error('User not found');
+        } else {
+            user = User.build();
+        }
+
         user.username = username;
         user.email = email;
         user.is_admin = is_admin === 'true';
+
         if (password) user.password = await bcrypt.hash(password, 10);
+
         await user.save();
+
         log.info(`${uuid ? 'Updated' : 'Created'} user ${username} by ${req.session.user.username}`);
+        req.session.successMessage = `${uuid ? 'Updated' : 'Created'} user ${username} successfully!`;
         res.redirect('/admin');
     } catch (error) {
-        log.error(`Failed to edit/add user: ${error.message}`);
-        res.status(500).render('error', { error: 'Failed to save user details' });
+        handleError(error, res, 'Failed to edit/add user');
     }
 }
 
@@ -88,16 +109,14 @@ async function disableUser(req, res) {
     const { uuid } = req.params;
     try {
         const user = await User.findByPk(uuid);
-        if (user) {
-            await user.destroy();
-            log.info(`User ${user.username} disabled by ${req.session.user.username}`);
-            res.redirect('/admin');
-        } else {
-            throw new Error('User not found');
-        }
+        if (!user) throw new Error('User not found');
+
+        await user.destroy();
+        log.info(`User ${user.username} disabled by ${req.session.user.username}`);
+        req.session.successMessage = `User ${user.username} has been disabled successfully.`;
+        res.redirect('/admin');
     } catch (error) {
-        log.error(`Failed to disable user: ${error.message}`);
-        res.status(500).render('error', { error: 'Failed to disable user' });
+        handleError(error, res, 'Failed to disable user');
     }
 }
 
