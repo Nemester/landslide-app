@@ -1,53 +1,64 @@
-var log4js = require('log4js');
+const log4js = require('log4js');
 require('dotenv').config();
 
+// Ensure environment variables are set
+const LOGLEVEL = process.env.LOGLEVEL || 'info';
+const LOGFILE = process.env.LOGFILE || 'logs/app.log';
+const MAXLOGSIZE = parseInt(process.env.MAXLOGSIZE, 10) || 10485760;  // Default: 10MB
+const LOGBACKUPS = parseInt(process.env.LOGBACKUPS, 10) || 3;
+const LOGCOMPRESSION = process.env.LOGCOMPRESSION === 'true';
+
+// Log layout pattern
+const logLayoutPattern = '[%d{yyyy-MM-dd hh:mm:ss}] [%p] - %m';
+
+// Configure log4js
 log4js.configure({
   appenders: {
     console: {
       type: 'console',
       layout: {
         type: 'pattern',
-        pattern: '%[[%d{yyyy-MM-dd hh:mm:ss}] [%p] -%] %m'
+        pattern: `%[[%d{yyyy-MM-dd hh:mm:ss}] [%p] -%] %m`
       }
     },
     file: {
       type: 'file',
-      filename: process.env.LOGFILE,
-      maxLogSize: parseInt(process.env.MAXLOGSIZE),
-      backups: process.env.LOGBACKUPS,
-      compress: process.env.LOGCOMPRESSION,
+      filename: LOGFILE,
+      maxLogSize: MAXLOGSIZE,
+      backups: LOGBACKUPS,
+      compress: LOGCOMPRESSION,
       layout: {
         type: 'pattern',
-        pattern: '[%d{yyyy-MM-dd hh:mm:ss}] [%p] - %m'
+        pattern: logLayoutPattern
       }
     }
   },
   categories: {
     main: {
-      appenders: [process.env.LOGMODE],
-      level: process.env.LOGLEVEL
+      appenders: ['console', 'file'],
+      level: LOGLEVEL
     },
     web: {
-      appenders: ["file"],
-      // appenders: [process.env.LOGMODE], //TODO: Change this back before deploying to production
-      level: process.env.LOGLEVEL
-    },    
+      appenders: ['file'],
+      level: LOGLEVEL
+    },
     default: {
       appenders: ['console'],
-      level: process.env.LOGLEVEL
+      level: LOGLEVEL
     }
   }
 });
 
-// Logger for system events
-let log = log4js.getLogger('main');
+// System logger for events
+const log = log4js.getLogger('main');
 
+// Web logger for HTTP requests
+const weblogger = log4js.getLogger('web');
 
-let weblogger = log4js.getLogger('web');
 // Connect middleware for express (HTTP logging)
-let applogger = log4js.connectLogger(weblogger, {
-  level: process.env.LOGLEVEL,
-  format: (req, res, format) => format(`:remote-addr - :method :url :status :response-time ms - :user-agent`)
+const applogger = log4js.connectLogger(weblogger, {
+  level: LOGLEVEL,
+  format: (req, res, format) => format(':remote-addr - :method :url :status :response-time ms - :user-agent')
 });
 
 module.exports = {
