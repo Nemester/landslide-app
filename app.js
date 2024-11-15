@@ -93,6 +93,9 @@ app.engine('handlebars', exphbs.engine({
     extname: ".hbs",
     helpers: {
       formatDate: (date) => {
+        return dayjs(date).format('YYYY-MM-DD');
+      },
+      formatDateTime: (date) => {
         return dayjs(date).format('YYYY-MM-DD HH:mm');
       }
     }

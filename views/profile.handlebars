@@ -50,8 +50,8 @@
             <div id="accountStats" class="accordion-collapse collapse" aria-labelledby="accountStatsHeading" data-bs-parent="#profileAccordion">
                 <div class="accordion-body">
                     <ul class="list-unstyled">
-                        <li><strong>Last Login:</strong> {{lastLogin}}</li>
-                        <li><strong>Last Password Change:</strong> {{lastPasswordChange}}</li>
+                        <li><strong>Last Login:</strong> {{formatDateTime lastLogin}}</li>
+                        <li><strong>Last Password Change:</strong> {{#if lastPasswordChange}}{{lastPasswordChange}}{{else}}-NEVER-{{/if}}</li>
                         <li><strong>Landslides Submitted:</strong> {{landslideCount}}</li>
                     </ul>
                 </div>
