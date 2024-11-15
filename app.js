@@ -9,6 +9,7 @@ const favicon = require('serve-favicon');
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
+const dayjs = require('dayjs');
 const session = require('express-session');
 var SQLiteStore = require('connect-sqlite3')(session);
 const { isAuthenticated, isAdmin } = require('./middlewares/authMiddleware');
@@ -90,6 +91,11 @@ app.use(express.static(__dirname + '/public'));
 app.engine('handlebars', exphbs.engine({
     defaultLayout: "main",
     extname: ".hbs",
+    helpers: {
+      formatDate: (date) => {
+        return dayjs(date).format('YYYY-MM-DD HH:mm');
+      }
+    }
     // helpers: require("./public/js/helpers.js").helpers
 }));
 app.set('view engine', 'handlebars');
