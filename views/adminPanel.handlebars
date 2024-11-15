@@ -26,10 +26,10 @@
                         {{#each configurations}}
                         <form action="/admin/configurations/update" method="POST">
                             <tr>
-                                <td>{{this.name}}</td>
+                                <td>{{this.dataValues.name}}</td>
                                 <td>
-                                    <input type="hidden" name="uuid" value="{{this.uuid}}">
-                                    <input type="text" name="value" class="form-control" value="{{this.value}}">
+                                    <input type="hidden" name="uuid" value="{{this.dataValues.uuid}}">
+                                    <input type="text" name="value" class="form-control" value="{{this.dataValues.value}}">
                                 </td>
                                 <td class="text-end">
                                     <button type="submit" class="btn btn-primary">Update</button>
@@ -64,10 +64,10 @@
                         {{#each information}}
                         <form action="/admin/information/update" method="POST">
                             <tr>
-                                <td>{{this.name}}</td>
+                                <td>{{this.dataValues.name}}</td>
                                 <td>
-                                    <input type="hidden" name="uuid" value="{{this.uuid}}">
-                                    <input type="text" name="value" class="form-control" value="{{this.value}}">
+                                    <input type="hidden" name="uuid" value="{{this.dataValues.uuid}}">
+                                    <input type="text" name="value" class="form-control" value="{{this.dataValues.value}}">
                                 </td>
                                 <td class="text-end">
                                     <button type="submit" class="btn btn-primary">Update</button>
@@ -152,24 +152,31 @@
                         <form action="/admin/users/edit" method="POST">
                         <tr>
                             <td>
-                                <input type="hidden" name="uuid" value="{{this.uuid}}">
-                                <input type="text" name="username" value="{{this.username}}" class="form-control" placeholder="Username">
+                                <input type="hidden" name="uuid" value="{{this.dataValues.uuid}}">
+                                <input type="text" name="username" value="{{this.dataValues.username}}" class="form-control" placeholder="Username">
                             </td>
                             <td>
-                                <input type="email" name="email" value="{{this.email}}" class="form-control" placeholder="Email">
+                                <input type="email" name="email" value="{{this.dataValues.email}}" class="form-control" placeholder="Email">
                             </td>
                             <td>
+                                {{#if this.dataValues.is_admin}}
                                 <select name="is_admin" class="form-control">
-                                    <option value="true" {{#if this.is_admin}}selected{{/if}}>Admin</option>
-                                    <option value="false" {{#unless this.is_admin}}selected{{/unless}}>User</option>
+                                    <option value="true" selected>Admin</option>
+                                    <option value="false">User</option>
                                 </select>
+                                {{else}}
+                                <select name="is_admin" class="form-control">
+                                    <option value="true">Admin</option>
+                                    <option value="false" selected>User</option>
+                                </select>
+                                {{/if}}
                             </td>
                             <td>
                                 <input type="password" name="password" class="form-control" placeholder="Set new password">
                             </td>
                             <td class="text-end">
                                 <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Update</button>
-                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal" data-uuid="{{this.uuid}}">
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal" data-uuid="{{this.dataValues.uuid}}">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
                             </td>

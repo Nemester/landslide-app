@@ -54,10 +54,18 @@ async function deleteUser(uuid) {
     }
 }
 
+const getAll = async () => {
+    try {
+        return await User.findAll();
+    } catch (error) {
+        throw new Error('Failed to retrieve User records: ' + error.message);
+    }
+}
 // Export functions as a service
 module.exports = {
     createUser,
     findUserByUUID,
     updateUser,
-    deleteUser
+    deleteUser,
+    getAll
 };

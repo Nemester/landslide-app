@@ -1,7 +1,7 @@
-// src/controllers/adminController.js
-const Configuration = require('../models/Configuration');
+const configurationService = require('../services/configurationService');
+const informationService = require('../services/informationService');
+const userService = require('../services/userService');
 const User = require('../models/User');
-const Information = require('../models/Information');
 const { log } = require('../config/logger');
 const bcrypt = require('bcrypt');
 
@@ -16,10 +16,11 @@ async function renderAdminPanel(req, res) {
     try {
         log.info(`User ${req.session.user.username} accessed admin dashboard`);
 
+        // Fetch configurations and information via services
         const [configurations, users, information] = await Promise.all([
-            Configuration.findAll(),
-            User.findAll(),
-            Information.findAll()
+            configurationService.getAll(), 
+            userService.getAll(),
+            informationService.getAll()
         ]);
 
         res.render('adminPanel', { 
@@ -44,11 +45,11 @@ async function renderAdminPanel(req, res) {
 async function updateInformation(req, res) {
     const { uuid, value } = req.body;
     try {
-        const info = await Information.findByPk(uuid);
+        const info = await informationService.getInformationByTitle(uuid);
         if (!info) throw new Error('Information not found');
 
-        info.value = value;
-        await info.save();
+        // Update and save information via the service
+        await informationService.updateInformation(uuid, { value });
 
         log.info(`Information ${info.name} updated by ${req.session.user.username}`);
         req.session.successMessage = "Information updated successfully!";
@@ -62,11 +63,11 @@ async function updateInformation(req, res) {
 async function updateConfiguration(req, res) {
     const { uuid, value } = req.body;
     try {
-        const config = await Configuration.findByPk(uuid);
+        const config = await configurationService.getConfigurationByKey(uuid);
         if (!config) throw new Error('Configuration not found');
 
-        config.value = value;
-        await config.save();
+        // Update and save configuration via the service
+        await configurationService.updateConfiguration(uuid, { value });
 
         log.info(`Configuration ${config.name} updated by ${req.session.user.username}`);
         req.session.successMessage = `Configuration '${config.name}' updated successfully!`;
