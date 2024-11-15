@@ -1,7 +1,28 @@
-// src/services/landslideService.js
 const Landslide = require('../models/Landslide');
 
-// Function to create a new landslide record
+// Helper function for geometry validation
+function validateGeometry(geometry) {
+    if (!geometry) throw new Error('Geometry is required');
+
+    let parsedGeometry;
+    try {
+        parsedGeometry = JSON.parse(geometry);
+    } catch (e) {
+        throw new Error('Invalid geometry JSON');
+    }
+
+    if (parsedGeometry.type === "FeatureCollection") {
+        parsedGeometry = parsedGeometry.features[0];
+    }
+
+    if (parsedGeometry.type !== "Feature" || !parsedGeometry.geometry) {
+        throw new Error('Invalid geometry data');
+    }
+
+    return JSON.stringify(parsedGeometry);
+}
+
+// Create a new landslide record
 async function createLandslide(data) {
     try {
         const landslide = await Landslide.create(data);
@@ -11,48 +32,52 @@ async function createLandslide(data) {
     }
 }
 
-// Function to retrieve all landslide records
+// Retrieve all landslides
 async function getAllLandslides() {
     try {
-        const landslides = await Landslide.findAll();
-        return landslides;
+        return await Landslide.findAll();
     } catch (error) {
         throw new Error('Failed to retrieve landslide records: ' + error.message);
     }
 }
 
-// Service function to get a landslide by ID
+// Get a landslide by ID
 async function getLandslideById(id) {
     try {
-        return landslide = await Landslide.findByPk(id);
+        return await Landslide.findByPk(id);
     } catch (error) {
-        console.error('Error fetching landslide from DB:', error);
-        throw error;
+        throw new Error('Error fetching landslide: ' + error.message);
     }
 }
 
-// Count landslides by user UUID
-async function countByUser(userUUID) {
+// Update a landslide record
+async function updateLandslide(landslide, { volume, depth, width, description, geometry }) {
+    if (geometry) {
+        landslide.geometry = validateGeometry(geometry);
+    }
+    landslide.volume = volume;
+    landslide.depth = depth;
+    landslide.width = width;
+    landslide.description = description;
+
     try {
-        return await Landslide.count({ where: { user_id: userUUID } });
+        await landslide.save();
     } catch (error) {
-        throw new Error('Error counting landslides: ' + error.message);
+        throw new Error('Error updating landslide record: ' + error.message);
     }
 }
 
-// Function to delete a landslide record by UUID
+// Delete a landslide record
 async function deleteLandslide(uuid) {
     try {
         const landslide = await Landslide.findOne({ where: { uuid } });
-
         if (!landslide) {
             throw new Error('Landslide not found');
         }
-
-        await landslide.destroy(); // Deletes the record
-        return true; // Indicate successful deletion
+        await landslide.destroy();
+        return true;
     } catch (error) {
-        throw new Error('Failed to delete landslide record: ' + error.message);
+        throw new Error('Failed to delete landslide: ' + error.message);
     }
 }
 
@@ -60,6 +85,6 @@ module.exports = {
     createLandslide,
     getAllLandslides,
     getLandslideById,
-    countByUser,
+    updateLandslide,
     deleteLandslide
 };
