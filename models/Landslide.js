@@ -31,6 +31,10 @@ const Landslide = sequelize.define('Landslide', {
         type: Sequelize.FLOAT, // Numeric field for width
         allowNull: true,
     },
+    surface: {
+        type: Sequelize.FLOAT, // Numeric field for surface
+        allowNull: true,
+    },
     description: {
         type: Sequelize.TEXT, // Optional description field
         allowNull: true,

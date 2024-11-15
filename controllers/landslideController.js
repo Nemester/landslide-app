@@ -6,6 +6,36 @@ function handleError(res, errorMessage, status = 500) {
     log.error(errorMessage);
     return res.status(status).render('error', { errorMessage });
 }
+function calculateSurfaceArea(points) {
+    const R = 6371000; // Earth's radius in meters
+  
+    if (points.length < 3) {
+      throw new Error("A polygon must have at least three points");
+    }
+  
+    // Convert degrees to radians
+    const toRadians = (degrees) => (degrees * Math.PI) / 180;
+  
+    // Project latitude/longitude to Cartesian plane in meters
+    const projectedPoints = points.map(([lon, lat]) => {
+      const latRad = toRadians(lat);
+      return {
+        x: R * toRadians(lon) * Math.cos(latRad),
+        y: R * latRad,
+      };
+    });
+  
+    // Use Shoelace formula to calculate area
+    let area = 0;
+    for (let i = 0; i < projectedPoints.length; i++) {
+      const j = (i + 1) % projectedPoints.length; // Wrap around to the first point
+      area +=
+        projectedPoints[i].x * projectedPoints[j].y -
+        projectedPoints[j].x * projectedPoints[i].y;
+    }
+  
+    return Math.abs(area / 2); // Return the absolute value of the area
+  }
 
 // Controller function to handle landslide form submission
 async function submitLandslide(req, res) {
@@ -15,7 +45,8 @@ async function submitLandslide(req, res) {
     if (!geometry || !volume || !depth || !width || !description || !date_occured) {
         return handleError(res, 'Missing required fields', 400);
     }
-
+    const surfaceArea = calculateSurfaceArea(JSON.parse(geometry).geometry.coordinates[0]);
+    console.log(surfaceArea)
     try {
         log.info(`Received landslide submission from user ${req.session.user.username}`);
 
