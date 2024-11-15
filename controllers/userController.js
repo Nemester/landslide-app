@@ -1,14 +1,14 @@
 // src/controllers/userController.js
 const userService = require('../services/userService');
-const landslideService = require('../services/landslideService'); // Assuming there's a service for landslide data
-const { log } = require('../config/logger'); // Assuming logger is set up
+const landslideService = require('../services/landslideService');
+const { log } = require('../config/logger');
 
 // Display profile page with user details
 async function showProfile(req, res) {
-    try {
-        const { uuid } = req.session.user;
-        log.info(`Attempting to retrieve profile for user with UUID: ${uuid}`);
+    const { uuid } = req.session.user;
+    log.info(`Attempting to retrieve profile for user with UUID: ${uuid}`);
 
+    try {
         const user = await userService.findUserByUUID(uuid);
         if (!user) {
             log.warn(`User not found for UUID: ${uuid}`);
@@ -35,16 +35,14 @@ async function showProfile(req, res) {
 
 // Handle user data update (e.g., name, email)
 async function updateUser(req, res) {
+    const { uuid } = req.session.user;
+    const { firstname, lastname, email, username } = req.body;
+
+    log.info(`Updating profile for user with UUID: ${uuid}`);
+    log.debug(`Update data for user ${uuid}: ${JSON.stringify({ firstname, lastname, email, username })}`);
+
     try {
-        const { uuid } = req.session.user;
-        const { firstname, lastname, email, username } = req.body;
-
-        log.info(`Updating profile for user with UUID: ${uuid}`);
-        log.debug(`Update data for user ${uuid}: ${JSON.stringify({ firstname, lastname, email, username })}`);
-
-        // Update user details
         await userService.updateUser(uuid, { firstname, lastname, email, username });
-
         log.info(`Profile successfully updated for user with UUID: ${uuid}`);
         res.redirect('/user');
     } catch (error) {
@@ -58,28 +56,28 @@ async function deleteUser(req, res) {
     const { id } = req.params; // Get the UUID from URL parameters
 
     try {
-        // Check if the logged-in user has permission to delete (creator or admin)
-        const user = await userService.findUserByUUID(id);
-        if (!user) {
-            req.session.errorMessage = `Error occured! Unable to find user with id ${id}`
-            res.redirect("/dashboard")
+        // Ensure the user has permission to delete the user
+        const userToDelete = await userService.findUserByUUID(id);
+        if (!userToDelete) {
+            req.session.errorMessage = `Error: Unable to find user with ID ${id}`;
+            return res.redirect("/dashboard");
         }
 
-        if (req.session.user.id !== user.user_id && !req.session.user.is_admin) {
-            req.session.errorMessage = `You do not have permission to delete this user`
-            res.redirect("/dashboard")
+        if (req.session.user.uuid !== userToDelete.uuid && !req.session.user.is_admin) {
+            req.session.errorMessage = `You do not have permission to delete this user`;
+            return res.redirect("/dashboard");
         }
 
-        // Call the service function to delete the user
+        // Delete the user
         await userService.deleteUser(id);
-        log.info(`user ${id} deleted by ${req.session.user.username}`);
+        log.info(`User ${id} deleted by ${req.session.user.username}`);
 
-        req.session.successMessage = `User deleted`
+        req.session.successMessage = `User successfully deleted.`;
         res.redirect('/dashboard');
     } catch (error) {
         log.error('Error deleting user:', error);
-        req.session.errorMessage = `Internal server error :(`
-        res.redirect("/dashboard")
+        req.session.errorMessage = `Internal server error.`;
+        res.redirect("/dashboard");
     }
 }
 

@@ -81,10 +81,20 @@ async function deleteLandslide(uuid) {
     }
 }
 
+// Get number of landslides for specific user
+async function countByUser(userUUID) {
+    try {
+        return await Landslide.count({ where: { user_id: userUUID } });
+    } catch (error) {
+        throw new Error('Error counting landslides: ' + error.message);
+    }
+}
+
 module.exports = {
     createLandslide,
     getAllLandslides,
     getLandslideById,
     updateLandslide,
-    deleteLandslide
+    deleteLandslide,
+    countByUser
 };
