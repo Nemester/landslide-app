@@ -1,20 +1,36 @@
-{{!-- views/profile.handlebars --}}
-
 <div class="container">
     <h2 class="text-center mb-4">Your Profile</h2>
 
     <!-- Accordion component -->
     <div class="accordion" id="profileAccordion">
-        
+        <!-- Account Statistics Section -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="accountStatsHeading">
+                <button class="accordion-button custom-accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accountStats" aria-expanded="false" aria-controls="accountStats">
+                    <i class="fas fa-chart-line me-2"></i> <!-- Account Statistics Icon -->
+                    Account Statistics
+                </button>
+            </h2>
+            <div id="accountStats" class="accordion-collapse collapse show" aria-labelledby="accountStatsHeading" data-bs-parent="#profileAccordion">
+                <div class="accordion-body">
+                    <ul class="list-unstyled">
+                        <li><strong>Last Login:</strong> {{formatDateTime lastLogin}}</li>
+                        <li><strong>Last Password Change:</strong> {{#if lastPasswordChange}}{{formatDateTime lastPasswordChange}}{{else}}-NEVER-{{/if}}</li>
+                        <li><strong>Landslides Submitted:</strong> {{landslideCount}}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
         <!-- Personal Information Section -->
         <div class="accordion-item">
             <h2 class="accordion-header" id="personalInfoHeading">
                 <button class="accordion-button custom-accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#personalInfo" aria-expanded="true" aria-controls="personalInfo">
                     <i class="fas fa-user-circle me-2"></i> <!-- Personal Info Icon -->
-                    Personal Information
+                    Account
                 </button>
             </h2>
-            <div id="personalInfo" class="accordion-collapse collapse show" aria-labelledby="personalInfoHeading" data-bs-parent="#profileAccordion">
+            <div id="personalInfo" class="accordion-collapse collapse" aria-labelledby="personalInfoHeading" data-bs-parent="#profileAccordion">
                 <div class="accordion-body">
                     <form action="/user" method="POST">
                         <div class="mb-3">
@@ -35,31 +51,106 @@
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Update Profile</button>
                     </form>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Account Statistics Section -->
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="accountStatsHeading">
-                <button class="accordion-button custom-accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accountStats" aria-expanded="false" aria-controls="accountStats">
-                    <i class="fas fa-chart-line me-2"></i> <!-- Account Statistics Icon -->
-                    Account Statistics
-                </button>
-            </h2>
-            <div id="accountStats" class="accordion-collapse collapse" aria-labelledby="accountStatsHeading" data-bs-parent="#profileAccordion">
-                <div class="accordion-body">
-                    <ul class="list-unstyled">
-                        <li><strong>Last Login:</strong> {{formatDateTime lastLogin}}</li>
-                        <li><strong>Last Password Change:</strong> {{#if lastPasswordChange}}{{lastPasswordChange}}{{else}}-NEVER-{{/if}}</li>
-                        <li><strong>Landslides Submitted:</strong> {{landslideCount}}</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
 
+                    <!-- Change Password Button -->
+                    <button class="btn btn-warning w-100 mt-3" data-bs-toggle="modal" data-bs-target="#changePasswordModal">Change Password</button>
+
+                    <!-- Delete Account Button -->
+                    <button class="btn btn-danger w-100 mt-3" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">Delete Account</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Change Password Modal -->
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="changePasswordForm" action="/user/password" method="POST">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+                    <div class="alert alert-danger d-none" id="passwordMismatchAlert" role="alert">
+                        Passwords do not match!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" id="changePasswordButton">Change Password</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('changePasswordForm');
+        const newPassword = document.getElementById('newPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+        const alert = document.getElementById('passwordMismatchAlert');
+        const submitButton = document.getElementById('changePasswordButton');
+
+        function validatePasswords() {
+            if (newPassword.value !== confirmPassword.value) {
+                alert.classList.remove('d-none');
+                submitButton.disabled = true;
+            } else {
+                alert.classList.add('d-none');
+                submitButton.disabled = false;
+            }
+        }
+
+        newPassword.addEventListener('input', validatePasswords);
+        confirmPassword.addEventListener('input', validatePasswords);
+
+        // Prevent form submission if passwords don't match
+        form.addEventListener('submit', function (event) {
+            if (newPassword.value !== confirmPassword.value) {
+                event.preventDefault();
+            }
+        });
+    });
+</script>
+
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="/user/delete/{{user.uuid}}" method="POST">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteAccountModalLabel">Confirm Account Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirmDeletion" required>
+                        <label class="form-check-label" for="confirmDeletion">
+                            I understand that this action is irreversible.
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Add CSS to Customize Accordion Header -->
 <style>
     /* Make the accordion headers more prominent */

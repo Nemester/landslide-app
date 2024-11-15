@@ -61,11 +61,18 @@ const getAll = async () => {
         throw new Error('Failed to retrieve User records: ' + error.message);
     }
 }
-// Export functions as a service
+
+// Update user password
+async function updatePassword(uuid, password) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    return User.update({ password: hashedPassword, last_password_change:  new Date() }, { where: { uuid } });
+}
+
 module.exports = {
     createUser,
     findUserByUUID,
     updateUser,
     deleteUser,
-    getAll
+    getAll,
+    updatePassword
 };

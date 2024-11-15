@@ -7,5 +7,5 @@ router.get('/', userController.showProfile);
 router.post('/', userController.updateUser);
 // Route to update user profile
 router.post('/delete/:id', userController.deleteUser);
-
+router.post('/password', userController.changePassword);
 module.exports = router;

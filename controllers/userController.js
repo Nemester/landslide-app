@@ -23,8 +23,14 @@ async function showProfile(req, res) {
             user: req.session.user,
             landslideCount,
             lastLogin: user.last_login,
-            lastPasswordChange: user.last_password_change
+            lastPasswordChange: user.last_password_change,
+            successMessage: req.session.successMessage,
+            errorMessage: req.session.errorMessage
         });
+
+         // Clear session messages after rendering
+         req.session.successMessage = undefined;
+         req.session.errorMessage = undefined;
 
         log.info(`Profile page displayed for user with UUID: ${uuid}`);
     } catch (error) {
@@ -81,8 +87,26 @@ async function deleteUser(req, res) {
     }
 }
 
+
+// Handle password change
+async function changePassword(req, res) {
+    const { uuid } = req.session.user;
+    const { newPassword } = req.body;
+
+    try {
+        await userService.updatePassword(uuid, newPassword);
+        req.session.successMessage = 'Password successfully updated.';
+        res.redirect('/user');
+    } catch (error) {
+        log.error(`Error changing password for UUID: ${uuid} - ${error.message}`);
+        req.session.errorMessage = 'Error changing password.';
+        res.redirect('/user');
+    }
+}
+
 module.exports = {
     showProfile,
     updateUser,
-    deleteUser
+    deleteUser,
+    changePassword
 };
