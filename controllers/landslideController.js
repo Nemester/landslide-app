@@ -34,7 +34,7 @@ function calculateSurfaceArea(points) {
         projectedPoints[j].x * projectedPoints[i].y;
     }
   
-    return Math.abs(area / 2); // Return the absolute value of the area
+    return Math.round(Math.abs(area / 2)); // Return the absolute value of the area
   }
 
 // Controller function to handle landslide form submission
@@ -45,11 +45,11 @@ async function submitLandslide(req, res) {
     if (!geometry || !volume || !depth || !width || !description || !date_occured) {
         return handleError(res, 'Missing required fields', 400);
     }
-    const surfaceArea = calculateSurfaceArea(JSON.parse(geometry).geometry.coordinates[0]);
-    console.log(surfaceArea)
     try {
-        log.info(`Received landslide submission from user ${req.session.user.username}`);
+        const surfaceArea = calculateSurfaceArea(JSON.parse(geometry).geometry.coordinates[0]);
 
+        log.info(`Received landslide submission from user ${req.session.user.username}`);
+        log.debug(`Calculated surface for the landslide: ${surfaceArea}`)
         const landslide = await landslideService.createLandslide({
             geometry,
             volume,
@@ -59,10 +59,11 @@ async function submitLandslide(req, res) {
             date_occured,
             lat: 0,
             lon: 0,
+            surface: surfaceArea,
             user_id: req.session.user.uuid
         });
 
-        log.info(`Landslide entry created successfully with ID: ${landslide.id}`);
+        log.info(`Landslide entry created successfully with ID: ${landslide.uuid}`);
         res.render('submitLandslide', { successMessage: 'Landslide record submitted successfully!' });
 
     } catch (error) {
