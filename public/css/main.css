@@ -1,0 +1,70 @@
+/* Additional styling to center the form */
+
+/* Custom navbar styles */
+.navbar {
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Adds a soft shadow to the navbar */
+}
+
+/* Nav item and link styles */
+.nav-item .nav-link {
+    padding: 0.8rem 1.2rem;
+    border-right: 1px solid rgba(0, 0, 0, 0.1); /* Adds a light border between nav items */
+    border-left: 1px solid rgba(0, 0, 0, 0.1); /* Adds a light border between nav items */
+    font-size: 1.1rem; /* Adjust the size to make it bigger */
+}
+.nav-item .nav-link:last-child {
+    border-right: none; /* Removes border from the last nav item */
+}
+
+/* Adjust the navbar brand font size */
+.navbar .navbar-brand {
+    font-size: 1.3rem; /* Increase size of the brand text */
+}
+
+/* Dropdown menu styling */
+.navbar-nav .dropdown-menu {
+    position: absolute;
+    top: 100%; /* Places the dropdown just below the toggle */
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    min-width: 200px; /* Ensures dropdown is not too narrow */
+    max-width: 250px; /* Prevents the dropdown from getting too wide */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Adds a shadow to the dropdown */
+    border-radius: 0.375rem; /* Rounded corners for the dropdown */
+    background-color: #fff;
+    overflow: hidden; /* Hides any overflowing content */
+    max-height: 300px; /* Maximum height for the dropdown */
+    overflow-y: auto; /* Allows scrolling when content exceeds the max height */
+}
+
+/* Dropdown item styles */
+.navbar-nav .dropdown-menu .dropdown-item {
+    font-size: 1.2rem; /* Adjust font size */
+    padding: 10px 15px; /* Padding for each dropdown item */
+    white-space: nowrap; /* Prevents text from wrapping */
+    overflow: hidden; /* Ensures content does not overflow */
+    text-overflow: ellipsis; /* Adds ellipsis for overflowing text */
+}
+
+/* Hover effect for dropdown items */
+.navbar-nav .dropdown-menu .dropdown-item:hover {
+    background-color: #f8f9fa; /* Light background color on hover */
+    color: #0056b3; /* Darker color on hover */
+}
+
+/* Ensure dropdown content does not spill outside the viewport */
+.navbar-nav .dropdown-menu {
+    left: auto;
+    right: 0; /* Align the dropdown to the right of the parent container */
+}
+
+/* Optional: Add responsive behavior for very small screens */
+@media (max-width: 576px) {
+    .navbar-nav .dropdown-menu {
+        position: static; /* Make dropdown menu static for small screens */
+        max-width: 100%; /* Allow dropdown to fill available space */
+        left: 0; /* Reset left positioning */
+        right: auto; /* Reset right positioning */
+    }
+}

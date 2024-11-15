@@ -1,0 +1,104 @@
+{{!-- src/views/landslideDetail.handlebars --}}
+{{#if landslide}}
+    <div class="container">
+        <h2 class="text-center mb-4">Landslide Details</h2>
+
+        {{#if canEdit}}
+            <!-- Edit Landslide Form -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <form action="/landslide/{{landslide.uuid}}" method="POST">
+                        <div class="mb-3" id="map" style="height: 400px; width: 100%;"></div>
+
+                        <div class="mb-3">
+                            <label for="volume" class="form-label">Volume (cubic meters)</label>
+                            <input type="number" class="form-control" id="volume" name="volume" value="{{landslide.volume}}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="depth" class="form-label">Depth (meters)</label>
+                            <input type="number" class="form-control" id="depth" name="depth" value="{{landslide.depth}}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="width" class="form-label">Width (meters)</label>
+                            <input type="number" class="form-control" id="width" name="width" value="{{landslide.width}}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required>{{landslide.description}}</textarea>
+                        </div>
+
+                        <!-- Hidden field for updated geometry -->
+                        <input type="hidden" id="geometry" name="geometry" value="{{{landslide.geometry}}}">
+
+                        <!-- Container for right-aligned button -->
+                        <div class="d-flex justify-content-end mb-3">
+                            <button type="submit" class="btn btn-primary mt-4"><i class="fas fa-save"></i> Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {{/if}}
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                // Parse the serialized geometry string into a GeoJSON object
+                const landslideGeometry = {{{landslide.geometry}}};  // Ensure it's valid JSON
+
+                // Initialize the map
+                const map = L.map('map').setView([46.5962, 9.5986], 13);  // Default view for the map (Savognin, Switzerland)
+
+                // Add OpenStreetMap tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                // Initialize Leaflet Draw Control
+                const drawControl = new L.Control.Draw({
+                    edit: {
+                        featureGroup: new L.FeatureGroup(),  // Feature group to store editable features
+                    },
+                    draw: {
+                        polygon: true,  // Allow drawing polygons
+                        circle: false,
+                        rectangle: false,
+                        marker: false
+                    }
+                }).addTo(map);
+
+                // Add the GeoJSON layer to the map if it exists
+                let geoJsonLayer;
+                if (landslideGeometry && landslideGeometry.type === 'Feature' && landslideGeometry.geometry) {
+                    geoJsonLayer = L.geoJSON(landslideGeometry).addTo(map);
+                    map.fitBounds(geoJsonLayer.getBounds());
+                }
+
+                // When a shape is drawn or edited, update the hidden geometry field
+                map.on('draw:created', function(e) {
+                    const layer = e.layer;
+                    const geoJson = layer.toGeoJSON();
+
+                    // Update the hidden input field with the new geometry
+                    document.getElementById('geometry').value = JSON.stringify(geoJson);
+                });
+
+                map.on('draw:edited', function(event) {
+                    // Update the hidden input field when editing occurs
+                    const layers = event.layers;
+                    layers.eachLayer(function(layer) {
+                        document.getElementById('geometry').value = JSON.stringify(layer.toGeoJSON());
+                    });
+                });
+
+                // Update the hidden field with the initial geometry on page load
+                if (geoJsonLayer) {
+                    document.getElementById('geometry').value = JSON.stringify(geoJsonLayer.toGeoJSON());
+                }
+            });
+        </script>
+    </div>
+{{else}}
+    <div class="alert alert-danger">
+        Landslide record not found.
+    </div>
+{{/if}}

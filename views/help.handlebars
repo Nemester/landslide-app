@@ -1,0 +1,123 @@
+{{!-- src/views/help.handlebars --}}
+<div class="help-page container py-5">
+    <h1 class="text-center mb-4">Help Guide - Landslide App</h1>
+
+    <div class="section mb-4">
+        <h2 class="section-title">What Can You Do as a Normal User?</h2>
+        <p>As a normal user of the Landslide App, you have the ability to:</p>
+        <ul>
+            <li><strong>Add a new landslide</strong> to the database.</li>
+            <li><strong>Update an existing landslide</strong> with new information or corrections.</li>
+        </ul>
+    </div>
+
+    <div class="section mb-4">
+        <h2 class="section-title">How to Add a New Landslide</h2>
+        <p>Follow these simple steps to add a new landslide:</p>
+        <ol>
+            <li><strong>Open the Map:</strong> Start by accessing the map view where you can interact with the landslide locations. The map will display existing landslides, and you can click to add a new one.</li>
+            <li><strong>Select the 'Add New Landslide' Button:</strong> In the map interface, look for the "Add New Landslide" button (a green button with a plus sign).</li>
+            <li><strong>Click on the Map:</strong> To specify the location of the landslide, click on the point on the map where the event occurred. This will set the location for the landslide.</li>
+            <li><strong>Fill in the Details:</strong> After selecting the location, a form will appear where you can fill in the details about the landslide, such as:
+                <ul>
+                    <li><strong>Volume:</strong> Estimate the volume of the landslide.</li>
+                    <li><strong>Location Name:</strong> Provide a name for the location if it isn't already recognized.</li>
+                    <li><strong>Date of Occurrence:</strong> Select the date when the landslide occurred.</li>
+                    <li><strong>Description:</strong> Provide additional information about the landslide (e.g., impact, affected areas).</li>
+                </ul>
+            </li>
+            <li><strong>Submit:</strong> After filling in all the required fields, click the "Submit" button to add the landslide to the database.</li>
+        </ol>
+        <div class="text-center">
+            <img src="/images/help/add-landslide.png" alt="Add Landslide Map Button" class="img-fluid my-4">
+            <p>Example: The "Add New Landslide" button and the form interface for adding new landslides.</p>
+        </div>
+    </div>
+
+    <div class="section mb-4">
+        <h2 class="section-title">How to Update an Existing Landslide</h2>
+        <p>If you need to update an existing landslide's information, follow these steps:</p>
+        <ol>
+            <li><strong>Locate the Landslide on the Map:</strong> Navigate through the map to find the landslide that you want to update. You can zoom in and out or search for it by name.</li>
+            <li><strong>Click on the Landslide:</strong> Once you locate the landslide, click on it to bring up the landslide's details.</li>
+            <li><strong>Edit the Information:</strong> A form will appear with the landslide's existing data. You can edit fields such as:
+                <ul>
+                    <li><strong>Volume</strong></li>
+                    <li><strong>Location Name</strong></li>
+                    <li><strong>Date of Occurrence</strong></li>
+                    <li><strong>Description</strong></li>
+                </ul>
+            </li>
+            <li><strong>Save the Changes:</strong> Once you've made the necessary changes, click the "Save" button to update the landslide information.</li>
+        </ol>
+        <div class="text-center">
+            <img src="/images/help/edit-landslide.png" alt="Edit Landslide Button" class="img-fluid my-4">
+            <p>Example: The interface for editing landslide information on the map.</p>
+        </div>
+    </div>
+
+    <div class="section mb-4">
+        <h2 class="section-title">Map Controls Overview</h2>
+        <p>Here’s an overview of the controls on the map interface to help you interact with landslides:</p>
+        <ul>
+            <li><strong>Zoom In/Out:</strong> Use the + and - buttons in the corner of the map to zoom in or out and explore different regions.</li>
+            <li><strong>Search:</strong> Use the search bar at the top to search for a specific location or landslide event.</li>
+            <li><strong>Map Layer Toggle:</strong> Toggle between different map layers (e.g., satellite view, terrain view) using the map controls.</li>
+            <li><strong>Add New Landslide:</strong> A green button with a plus sign to add a new landslide by selecting a location on the map.</li>
+            <li><strong>Update Landslide:</strong> Click on a landslide marker to open its details and update the information.</li>
+        </ul>
+        <div class="text-center">
+            <img src="/images/help/map-controls.png" alt="Map Controls" class="img-fluid my-4">
+            <p>Example: Overview of the map controls including zoom, search, and add/update options.</p>
+        </div>
+    </div>
+
+    <div class="section text-center">
+        <h2 class="section-title">Still Have Questions?</h2>
+        <p>If you need more help or have specific questions, feel free to contact our support team or visit the <a href="/contact" class="btn btn-link">Contact Page</a>.</p>
+    </div>
+
+</div>
+
+<!-- Add CSS to Style the Page -->
+<style>
+    .help-page {
+        max-width: 900px;
+        margin: auto;
+        padding: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+        color: #007bff;
+        margin-bottom: 1rem;
+    }
+
+    .section p, .section ul, .section ol {
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .section img {
+        max-width: 100%;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .section ul, .section ol {
+        margin-left: 1.5rem;
+    }
+
+    .section li {
+        margin-bottom: 0.8rem;
+    }
+
+    .btn-link {
+        color: #007bff;
+    }
+
+    .btn-link:hover {
+        color: #0056b3;
+        text-decoration: underline;
+    }
+</style>

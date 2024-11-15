@@ -1,0 +1,245 @@
+{{!-- src/views/adminPanel.handlebars --}}
+
+<h2 class="text-center mb-4">Admin Dashboard</h2>
+
+<!-- Accordion Container -->
+<div class="accordion" id="adminAccordion">
+
+    <!-- Configuration Settings Section -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingConfig">
+            <button class="accordion-button custom-accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfig" aria-expanded="true" aria-controls="collapseConfig">
+                <i class="fas fa-cogs me-2"></i> Configuration Settings
+            </button>
+        </h2>
+        <div id="collapseConfig" class="accordion-collapse collapse show" aria-labelledby="headingConfig" data-bs-parent="#adminAccordion">
+            <div class="accordion-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Value</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each configurations}}
+                        <form action="/admin/configurations/update" method="POST">
+                            <tr>
+                                <td>{{this.name}}</td>
+                                <td>
+                                    <input type="hidden" name="uuid" value="{{this.uuid}}">
+                                    <input type="text" name="value" class="form-control" value="{{this.value}}">
+                                </td>
+                                <td class="text-end">
+                                    <button type="submit" class="btn btn-primary">Update</button>
+                                </td>
+                            </tr>
+                        </form>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Information Management Section -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingInfo">
+            <button class="accordion-button custom-accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInfo" aria-expanded="false" aria-controls="collapseInfo">
+                <i class="fas fa-file-alt me-2"></i> Information Management
+            </button>
+        </h2>
+        <div id="collapseInfo" class="accordion-collapse collapse" aria-labelledby="headingInfo" data-bs-parent="#adminAccordion">
+            <div class="accordion-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Value</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each information}}
+                        <form action="/admin/information/update" method="POST">
+                            <tr>
+                                <td>{{this.name}}</td>
+                                <td>
+                                    <input type="hidden" name="uuid" value="{{this.uuid}}">
+                                    <input type="text" name="value" class="form-control" value="{{this.value}}">
+                                </td>
+                                <td class="text-end">
+                                    <button type="submit" class="btn btn-primary">Update</button>
+                                </td>
+                            </tr>
+                        </form>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Section -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingUsers">
+            <button class="accordion-button custom-accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUsers" aria-expanded="false" aria-controls="collapseUsers">
+                <i class="fas fa-users me-2"></i> User Management
+            </button>
+        </h2>
+        <div id="collapseUsers" class="accordion-collapse collapse" aria-labelledby="headingUsers" data-bs-parent="#adminAccordion">
+            <div class="accordion-body">
+                <!-- Container for right-aligned button -->
+                <div class="d-flex justify-content-end mb-3">
+                    <!-- Button to Open "Add New User" Modal -->
+                    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fas fa-user-plus me-2"></i> Add New User
+                    </button>
+                </div>
+
+                <!-- Add New User Modal -->
+                <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form action="/admin/users/add" method="POST">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="username" class="form-label">Username</label>
+                                        <input type="text" id="username" name="username" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" id="email" name="email" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="is_admin" class="form-label">Role</label>
+                                        <select id="is_admin" name="is_admin" class="form-select">
+                                            <option value="false">User</option>
+                                            <option value="true">Admin</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="password" class="form-label">Password</label>
+                                        <input type="password" id="password" name="password" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Add User</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Password</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each users}}
+                        <form action="/admin/users/edit" method="POST">
+                        <tr>
+                            <td>
+                                <input type="hidden" name="uuid" value="{{this.uuid}}">
+                                <input type="text" name="username" value="{{this.username}}" class="form-control" placeholder="Username">
+                            </td>
+                            <td>
+                                <input type="email" name="email" value="{{this.email}}" class="form-control" placeholder="Email">
+                            </td>
+                            <td>
+                                <select name="is_admin" class="form-control">
+                                    <option value="true" {{#if this.is_admin}}selected{{/if}}>Admin</option>
+                                    <option value="false" {{#unless this.is_admin}}selected{{/unless}}>User</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="password" name="password" class="form-control" placeholder="Set new password">
+                            </td>
+                            <td class="text-end">
+                                <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Update</button>
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal" data-uuid="{{this.uuid}}">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                        </form>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- User Deletion Confirmation Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteUserModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this user? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteUserForm" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Script to dynamically set the form action for user deletion
+    document.addEventListener('show.bs.modal', function (event) {
+        if (event.target.id === 'deleteUserModal') {
+            const button = event.relatedTarget;
+            const uuid = button.getAttribute('data-uuid');
+            const form = document.getElementById('deleteUserForm');
+            form.action = `/admin/users/disable/${uuid}`;
+        }
+    });
+</script>
+
+
+<!-- Add CSS to Customize Accordion Header -->
+<style>
+    /* Make the accordion headers more prominent */
+    .accordion-button.custom-accordion-button {
+        font-size: 1.25rem; /* Larger font size */
+        font-weight: bold;  /* Bold text */
+        {{!-- background-color: #007bff; /* Blue background */
+        color: #ffffff;    /* White text */ --}}
+        border-radius: 0.375rem; /* Rounded corners */
+        padding: 0.75rem 1rem; /* Add padding */
+    }
+
+    .accordion-button.custom-accordion-button:focus {
+        box-shadow: none; /* Remove the focus shadow */
+    }
+{{!-- 
+    .accordion-button:not(.collapsed) {
+        background-color: #0056b3; /* Darker blue when open */
+        color: #ffffff;    /* Keep the text white */
+    } --}}
+
+    .accordion-button i {
+        margin-right: 10px; /* Space between icon and text */
+    }
+</style>
