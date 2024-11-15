@@ -48,6 +48,7 @@ The application allows users to submit landslide information, view details, and 
 landslide-app/
 │
 ├── config/
+│   ├── logger.js                   # Logging
 │   └── database.js                 # Database connection and Sequelize setup
 ├
 │── controllers/                    # Contains the controllers (logic)
@@ -128,6 +129,12 @@ To make the app your own, adjust the following sections:
 - **Colors**: Modify the colors in main.css to better fit your brand.
 - **Icons**: Use Font Awesome for custom icons or change the navbar-brand icon.
 - **Text**: Adjust labels in login.handlebars and navbar links for your specific needs.
+
+## Backlog
+
+- Improve security and add JWT signed token
+- Improve / Add logging
+- Refactor Services/Controllers
 
 ## Screenshots
 
