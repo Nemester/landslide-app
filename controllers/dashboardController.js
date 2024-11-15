@@ -1,24 +1,24 @@
 // src/controllers/dashboardController.js
-const dashboardService = require('../services/dashboardService');
-const { log } = require('../config/logger'); // Assuming logger is set up
+const landslideService = require('../services/landslideService');
+const { log } = require('../config/logger');
 
 // Controller to render the dashboard page
 async function renderDashboard(req, res) {
+    const { user } = req.session;  // Destructure user from session
+
+    log.info(`Rendering dashboard for user: ${user.username}`);
+
     try {
-        // Get the logged-in user's details from session
-        const user = req.session.user;
-
-        log.info(`Rendering dashboard for user: ${user.username}`);
-
-        // Fetch landslides using the dashboard service
-        let landslides = null;
-        if(req.session.user.is_admin){
-            landslides = await dashboardService.getLandslides();
-        }else{
-            landslides = await dashboardService.getLandslidesForUser(user.uuid);
-            console.log(req.session.user)
+        let landslides = [];
+        
+        // Fetch landslides based on user's role (admin or regular user)
+        if (user.is_admin) {
+            // Admin can see all landslides
+            landslides = await landslideService.getAllLandslides();
+        } else {
+            // Regular user can only see their landslides
+            landslides = await landslideService.getLandslidesForUser(user.uuid);
         }
-
 
         // Render dashboard template with user and landslide data
         res.render('dashboard', {
@@ -27,12 +27,16 @@ async function renderDashboard(req, res) {
             successMessage: req.session.successMessage, 
             errorMessage: req.session.errorMessage
         });
-        req.session.successMessage = undefined
-        req.session.errorMessage = undefined
+
+        // Clear the success and error messages from session after rendering
+        req.session.successMessage = undefined;
+        req.session.errorMessage = undefined;
 
     } catch (error) {
-        log.error(`Error fetching dashboard data: ${error.message}`);
-        res.status(500).send('Error fetching data for dashboard');
+        // Log and handle any errors that occur during the dashboard rendering
+        log.error(`Error fetching dashboard data for user ${user.username}: ${error.message}`);
+        req.session.errorMessage = 'Error fetching data for dashboard';
+        res.redirect('/dashboard');  // Redirect back to dashboard with error message
     }
 }
 
