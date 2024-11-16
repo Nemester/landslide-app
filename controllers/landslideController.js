@@ -7,8 +7,8 @@ function handleError(res, errorMessage, status = 500) {
     return res.status(status).render('error', { errorMessage });
 }
 
-// Helper function to calculate surface area
-function calculateSurfaceArea(points) {
+// Helper function to calculate surface area and centroid
+function calculateSurfaceAndCentroid(points) {
     const R = 6371000; // Earth's radius in meters
 
     if (points.length < 3) {
@@ -16,24 +16,50 @@ function calculateSurfaceArea(points) {
     }
 
     const toRadians = (degrees) => (degrees * Math.PI) / 180;
+    const toDegrees = (radians) => (radians * 180) / Math.PI;
 
-    const projectedPoints = points.map(([lon, lat]) => {
-        const latRad = toRadians(lat);
-        return {
-            x: R * toRadians(lon) * Math.cos(latRad),
-            y: R * latRad,
-        };
-    });
+    let area = 0; // To store the area
+    let centroidX = 0; // Weighted sum of x-coordinates
+    let centroidY = 0; // Weighted sum of y-coordinates
+    let centroidZ = 0; // Weighted sum of z-coordinates (for spherical coordinates)
 
-    let area = 0;
-    for (let i = 0; i < projectedPoints.length; i++) {
-        const j = (i + 1) % projectedPoints.length;
-        area +=
-            projectedPoints[i].x * projectedPoints[j].y -
-            projectedPoints[j].x * projectedPoints[i].y;
+    for (let i = 0; i < points.length; i++) {
+        const [lon1, lat1] = points[i];
+        const [lon2, lat2] = points[(i + 1) % points.length]; // Next point (wrapping around)
+
+        // Convert latitude/longitude to radians
+        const lat1Rad = toRadians(lat1);
+        const lat2Rad = toRadians(lat2);
+        const lon1Rad = toRadians(lon1);
+        const lon2Rad = toRadians(lon2);
+
+        // Compute area using the shoelace formula
+        const shoelaceFactor = (lon1Rad * lat2Rad - lon2Rad * lat1Rad);
+        area += shoelaceFactor;
+
+        // Centroid computation (weighted average of points)
+        const avgLon = (lon1 + lon2) / 2;
+        const avgLat = (lat1 + lat2) / 2;
+        const weight = Math.abs(shoelaceFactor);
+
+        centroidX += weight * Math.cos(toRadians(avgLat)) * Math.cos(toRadians(avgLon));
+        centroidY += weight * Math.cos(toRadians(avgLat)) * Math.sin(toRadians(avgLon));
+        centroidZ += weight * Math.sin(toRadians(avgLat));
     }
 
-    return Math.round(Math.abs(area / 2));
+    // Normalize area
+    area = Math.abs(area / 2);
+
+    // Calculate centroid in spherical coordinates
+    const totalWeight = Math.abs(area);
+    centroidX /= totalWeight;
+    centroidY /= totalWeight;
+    centroidZ /= totalWeight;
+
+    const centralLon = toDegrees(Math.atan2(centroidY, centroidX));
+    const centralLat = toDegrees(Math.atan2(centroidZ, Math.sqrt(centroidX ** 2 + centroidY ** 2)));
+
+    return { area: Math.round(area), centroid: { lat: centralLat, lon: centralLon } };
 }
 
 // Controller function to handle landslide form submission
@@ -46,11 +72,11 @@ async function submitLandslide(req, res) {
     }
 
     try {
-        log.debug('Parsing geometry to calculate surface area');
-        const surfaceArea = calculateSurfaceArea(JSON.parse(geometry).geometry.coordinates[0]);
+        log.debug('Parsing geometry to calculate surface area and centroid');
+        const { area: surfaceArea, centroid } = calculateSurfaceAndCentroid(JSON.parse(geometry).geometry.coordinates[0]);
 
         log.info(`User ${req.session.user.username} is submitting a new landslide`);
-        log.debug(`Calculated surface area: ${surfaceArea}`);
+        log.debug(`Calculated surface area: ${surfaceArea}, Centroid: lat=${centroid.lat}, lon=${centroid.lon}`);
 
         const landslide = await landslideService.createLandslide({
             geometry,
@@ -59,15 +85,15 @@ async function submitLandslide(req, res) {
             width,
             description,
             date_occured,
-            lat: 0,
-            lon: 0,
+            lat: centroid.lat,
+            lon: centroid.lon,
             surface: surfaceArea,
             user_id: req.session.user.uuid,
         });
 
         log.info(`Landslide entry created successfully with ID: ${landslide.uuid}`);
         res.render('submitLandslide', { successMessage: 'Landslide record submitted successfully!' });
-
+        // TODO: Redirect to the landslide overview page (or edit page)
     } catch (error) {
         log.error(`Failed to submit landslide: ${error.message}`);
         handleError(res, `Failed to submit landslide record: ${error.message}`);
