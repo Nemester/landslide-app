@@ -61,7 +61,12 @@ const applogger = log4js.connectLogger(weblogger, {
   format: (req, res, format) => format(':remote-addr - :method :url :status :response-time ms - :user-agent')
 });
 
+const setupLogging = (app) => {
+  app.use(applogger);
+};
+
 module.exports = {
+  setupLogging,
   log,
   applogger,
 };
