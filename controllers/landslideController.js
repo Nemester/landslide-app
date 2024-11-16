@@ -6,50 +6,52 @@ function handleError(res, errorMessage, status = 500) {
     log.error(errorMessage);
     return res.status(status).render('error', { errorMessage });
 }
+
+// Helper function to calculate surface area
 function calculateSurfaceArea(points) {
     const R = 6371000; // Earth's radius in meters
-  
+
     if (points.length < 3) {
-      throw new Error("A polygon must have at least three points");
+        throw new Error("A polygon must have at least three points");
     }
-  
-    // Convert degrees to radians
+
     const toRadians = (degrees) => (degrees * Math.PI) / 180;
-  
-    // Project latitude/longitude to Cartesian plane in meters
+
     const projectedPoints = points.map(([lon, lat]) => {
-      const latRad = toRadians(lat);
-      return {
-        x: R * toRadians(lon) * Math.cos(latRad),
-        y: R * latRad,
-      };
+        const latRad = toRadians(lat);
+        return {
+            x: R * toRadians(lon) * Math.cos(latRad),
+            y: R * latRad,
+        };
     });
-  
-    // Use Shoelace formula to calculate area
+
     let area = 0;
     for (let i = 0; i < projectedPoints.length; i++) {
-      const j = (i + 1) % projectedPoints.length; // Wrap around to the first point
-      area +=
-        projectedPoints[i].x * projectedPoints[j].y -
-        projectedPoints[j].x * projectedPoints[i].y;
+        const j = (i + 1) % projectedPoints.length;
+        area +=
+            projectedPoints[i].x * projectedPoints[j].y -
+            projectedPoints[j].x * projectedPoints[i].y;
     }
-  
-    return Math.round(Math.abs(area / 2)); // Return the absolute value of the area
-  }
+
+    return Math.round(Math.abs(area / 2));
+}
 
 // Controller function to handle landslide form submission
 async function submitLandslide(req, res) {
     const { geometry, volume, depth, width, description, date_occured } = req.body;
 
-    // Validate request parameters
     if (!geometry || !volume || !depth || !width || !description || !date_occured) {
+        log.warn('Missing required fields for landslide submission');
         return handleError(res, 'Missing required fields', 400);
     }
+
     try {
+        log.debug('Parsing geometry to calculate surface area');
         const surfaceArea = calculateSurfaceArea(JSON.parse(geometry).geometry.coordinates[0]);
 
-        log.info(`Received landslide submission from user ${req.session.user.username}`);
-        log.debug(`Calculated surface for the landslide: ${surfaceArea}`)
+        log.info(`User ${req.session.user.username} is submitting a new landslide`);
+        log.debug(`Calculated surface area: ${surfaceArea}`);
+
         const landslide = await landslideService.createLandslide({
             geometry,
             volume,
@@ -60,13 +62,14 @@ async function submitLandslide(req, res) {
             lat: 0,
             lon: 0,
             surface: surfaceArea,
-            user_id: req.session.user.uuid
+            user_id: req.session.user.uuid,
         });
 
         log.info(`Landslide entry created successfully with ID: ${landslide.uuid}`);
         res.render('submitLandslide', { successMessage: 'Landslide record submitted successfully!' });
 
     } catch (error) {
+        log.error(`Failed to submit landslide: ${error.message}`);
         handleError(res, `Failed to submit landslide record: ${error.message}`);
     }
 }
@@ -76,46 +79,54 @@ async function displaySingleLandslide(req, res) {
     const landslideId = req.params.id;
 
     try {
+        log.debug(`Fetching landslide with ID: ${landslideId}`);
         const landslide = await landslideService.getLandslideById(landslideId);
 
         if (!landslide) {
+            log.warn(`Landslide not found: ${landslideId}`);
             return handleError(res, 'Landslide not found', 404);
         }
 
         const landslideData = landslide.get({ plain: true });
-        const canEdit = req.session.user && (req.session.user.id === landslideData.user_id || req.session.user.is_admin);
+        const canEdit = req.session.user &&
+            (req.session.user.id === landslideData.user_id || req.session.user.is_admin);
 
-        log.debug(`User ${req.session.user.username} viewed landslide ${landslideData.uuid}`);
+        log.info(`User ${req.session.user.username} viewed landslide ${landslideData.uuid}`);
         res.render('landslideDetail', { landslide: landslideData, canEdit });
 
     } catch (error) {
+        log.error(`Error fetching landslide ${landslideId}: ${error.message}`);
         handleError(res, 'Error fetching landslide', 500);
     }
 }
 
+// Controller function to update a landslide
 async function updateLandslide(req, res) {
     const landslideId = req.params.id;
     const { volume, depth, width, description, geometry } = req.body;
 
     try {
+        log.debug(`Fetching landslide for update: ${landslideId}`);
         const landslide = await landslideService.getLandslideById(landslideId);
 
         if (!landslide) {
+            log.warn(`Attempt to update non-existent landslide: ${landslideId}`);
             return handleError(res, 'Landslide not found', 404);
         }
 
-        // Check if the logged-in user is authorized to edit the landslide
         if (req.session.user.id !== landslide.user_id && !req.session.user.is_admin) {
+            log.warn(`Unauthorized update attempt on landslide ${landslideId} by user ${req.session.user.username}`);
             return handleError(res, 'Permission denied to edit this landslide.', 403);
         }
 
-        // Update landslide details
+        log.info(`Updating landslide ${landslideId} by user ${req.session.user.username}`);
         await landslideService.updateLandslide(landslide, { volume, depth, width, description, geometry });
 
-        log.info(`Landslide ${landslide.uuid} updated by ${req.session.user.username}`);
+        log.info(`Landslide ${landslide.uuid} updated successfully`);
         res.redirect(`/landslide/edit/${landslideId}`);
 
     } catch (error) {
+        log.error(`Error updating landslide ${landslideId}: ${error.message}`);
         handleError(res, `Error updating landslide: ${error.message}`);
     }
 }
@@ -125,21 +136,26 @@ async function deleteLandslide(req, res) {
     const { id } = req.params;
 
     try {
+        log.debug(`Fetching landslide for deletion: ${id}`);
         const landslide = await landslideService.getLandslideById(id);
+
         if (!landslide) {
+            log.warn(`Attempt to delete non-existent landslide: ${id}`);
             return handleError(res, 'Landslide not found', 404);
         }
 
         if (req.session.user.id !== landslide.user_id && !req.session.user.is_admin) {
+            log.warn(`Unauthorized delete attempt on landslide ${id} by user ${req.session.user.username}`);
             return handleError(res, 'Permission denied to delete this landslide.', 403);
         }
 
         await landslideService.deleteLandslide(id);
-        log.info(`Landslide ${id} deleted by ${req.session.user.username}`);
-        req.session.successMessage = 'Landslide deleted';
+        log.info(`Landslide ${id} deleted by user ${req.session.user.username}`);
+        req.session.successMessage = 'Landslide deleted successfully';
         res.redirect('/dashboard');
 
     } catch (error) {
+        log.error(`Error deleting landslide ${id}: ${error.message}`);
         handleError(res, 'Internal server error', 500);
     }
 }
@@ -148,5 +164,5 @@ module.exports = {
     submitLandslide,
     displaySingleLandslide,
     updateLandslide,
-    deleteLandslide
+    deleteLandslide,
 };

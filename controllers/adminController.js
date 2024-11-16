@@ -14,15 +14,16 @@ function handleError(error, res, customMessage) {
 // Render admin dashboard with configurations, users, and information list
 async function renderAdminPanel(req, res) {
     try {
-        log.info(`User ${req.session.user.username} accessed admin dashboard`);
+        log.info(`User ${req.session.user.username} is accessing the admin dashboard`);
+        log.debug('Fetching configurations, users, and information');
 
-        // Fetch configurations and information via services
         const [configurations, users, information] = await Promise.all([
             configurationService.getAll(), 
             userService.getAll(),
             informationService.getAll()
         ]);
 
+        log.debug('Fetched data successfully, rendering admin dashboard');
         res.render('adminPanel', { 
             configurations, 
             users, 
@@ -35,8 +36,9 @@ async function renderAdminPanel(req, res) {
         req.session.successMessage = undefined;
         req.session.errorMessage = undefined;
 
-        log.info(`Admin dashboard successfully loaded for ${req.session.user.username}`);
+        log.info(`Admin dashboard loaded successfully for ${req.session.user.username}`);
     } catch (error) {
+        log.error(`Error while loading admin dashboard for ${req.session.user.username}`);
         handleError(error, res, 'Failed to load admin dashboard');
     }
 }
@@ -45,16 +47,21 @@ async function renderAdminPanel(req, res) {
 async function updateInformation(req, res) {
     const { uuid, value } = req.body;
     try {
+        log.debug(`Fetching information with title: ${uuid}`);
         const info = await informationService.getInformationByTitle(uuid);
-        if (!info) throw new Error('Information not found');
+        if (!info) {
+            log.warn(`Information with title '${uuid}' not found`);
+            throw new Error('Information not found');
+        }
 
-        // Update and save information via the service
+        log.debug(`Updating information '${info.name}' with new value`);
         await informationService.updateInformation(uuid, { value });
 
-        log.info(`Information ${info.name} updated by ${req.session.user.username}`);
+        log.info(`Information '${info.name}' updated by ${req.session.user.username}`);
         req.session.successMessage = "Information updated successfully!";
         res.redirect('/admin');
     } catch (error) {
+        log.error(`Failed to update information with title '${uuid}'`);
         handleError(error, res, 'Failed to update information');
     }
 }
@@ -63,16 +70,21 @@ async function updateInformation(req, res) {
 async function updateConfiguration(req, res) {
     const { uuid, value } = req.body;
     try {
+        log.debug(`Fetching configuration with key: ${uuid}`);
         const config = await configurationService.getConfigurationByKey(uuid);
-        if (!config) throw new Error('Configuration not found');
+        if (!config) {
+            log.warn(`Configuration with key '${uuid}' not found`);
+            throw new Error('Configuration not found');
+        }
 
-        // Update and save configuration via the service
+        log.debug(`Updating configuration '${config.name}' with new value`);
         await configurationService.updateConfiguration(uuid, { value });
 
-        log.info(`Configuration ${config.name} updated by ${req.session.user.username}`);
+        log.info(`Configuration '${config.name}' updated by ${req.session.user.username}`);
         req.session.successMessage = `Configuration '${config.name}' updated successfully!`;
         res.redirect('/admin');
     } catch (error) {
+        log.error(`Failed to update configuration with key '${uuid}'`);
         handleError(error, res, 'Failed to update configuration');
     }
 }
@@ -83,9 +95,15 @@ async function editOrAddUser(req, res) {
     try {
         let user;
         if (uuid) {
+            log.debug(`Fetching user with UUID: ${uuid}`);
             user = await User.findByPk(uuid);
-            if (!user) throw new Error('User not found');
+            if (!user) {
+                log.warn(`User with UUID '${uuid}' not found`);
+                throw new Error('User not found');
+            }
+            log.debug(`Editing user: ${user.username}`);
         } else {
+            log.debug('Creating a new user');
             user = User.build();
         }
 
@@ -93,14 +111,18 @@ async function editOrAddUser(req, res) {
         user.email = email;
         user.is_admin = is_admin === 'true';
 
-        if (password) user.password = await bcrypt.hash(password, 10);
+        if (password) {
+            log.debug(`Hashing password for user: ${username}`);
+            user.password = await bcrypt.hash(password, 10);
+        }
 
         await user.save();
 
-        log.info(`${uuid ? 'Updated' : 'Created'} user ${username} by ${req.session.user.username}`);
-        req.session.successMessage = `${uuid ? 'Updated' : 'Created'} user ${username} successfully!`;
+        log.info(`${uuid ? 'Updated' : 'Created'} user '${username}' by ${req.session.user.username}`);
+        req.session.successMessage = `${uuid ? 'Updated' : 'Created'} user '${username}' successfully!`;
         res.redirect('/admin');
     } catch (error) {
+        log.error(`Failed to ${uuid ? 'edit' : 'create'} user '${username}'`);
         handleError(error, res, 'Failed to edit/add user');
     }
 }
@@ -109,14 +131,21 @@ async function editOrAddUser(req, res) {
 async function disableUser(req, res) {
     const { uuid } = req.params;
     try {
+        log.debug(`Fetching user with UUID: ${uuid}`);
         const user = await User.findByPk(uuid);
-        if (!user) throw new Error('User not found');
+        if (!user) {
+            log.warn(`User with UUID '${uuid}' not found`);
+            throw new Error('User not found');
+        }
 
+        log.debug(`Disabling user: ${user.username}`);
         await user.destroy();
-        log.info(`User ${user.username} disabled by ${req.session.user.username}`);
-        req.session.successMessage = `User ${user.username} has been disabled successfully.`;
+
+        log.info(`User '${user.username}' disabled by ${req.session.user.username}`);
+        req.session.successMessage = `User '${user.username}' has been disabled successfully.`;
         res.redirect('/admin');
     } catch (error) {
+        log.error(`Failed to disable user with UUID '${uuid}'`);
         handleError(error, res, 'Failed to disable user');
     }
 }

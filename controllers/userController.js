@@ -1,4 +1,3 @@
-// src/controllers/userController.js
 const userService = require('../services/userService');
 const landslideService = require('../services/landslideService');
 const { log } = require('../config/logger');
@@ -12,10 +11,9 @@ async function showProfile(req, res) {
         const user = await userService.findUserByUUID(uuid);
         if (!user) {
             log.warn(`User not found for UUID: ${uuid}`);
-            return res.status(404).send("User not found.");
+            return res.status(404).render('error', { errorMessage: "User not found" });
         }
 
-        // Get landslide count by user
         const landslideCount = await landslideService.countByUser(uuid);
         log.debug(`Landslide count for user ${uuid}: ${landslideCount}`);
 
@@ -25,17 +23,16 @@ async function showProfile(req, res) {
             lastLogin: user.last_login,
             lastPasswordChange: user.last_password_change,
             successMessage: req.session.successMessage,
-            errorMessage: req.session.errorMessage
+            errorMessage: req.session.errorMessage,
         });
 
-         // Clear session messages after rendering
-         req.session.successMessage = undefined;
-         req.session.errorMessage = undefined;
+        req.session.successMessage = undefined;
+        req.session.errorMessage = undefined;
 
-        log.info(`Profile page displayed for user with UUID: ${uuid}`);
+        log.info(`Profile page successfully displayed for user with UUID: ${uuid}`);
     } catch (error) {
         log.error(`Error loading profile page for UUID: ${uuid} - ${error.message}`);
-        res.status(500).send('Error loading profile page: ' + error.message);
+        res.status(500).render('error', { errorMessage: `Error loading profile: ${error.message}` });
     }
 }
 
@@ -44,57 +41,62 @@ async function updateUser(req, res) {
     const { uuid } = req.session.user;
     const { firstname, lastname, email, username } = req.body;
 
-    log.info(`Updating profile for user with UUID: ${uuid}`);
-    log.debug(`Update data for user ${uuid}: ${JSON.stringify({ firstname, lastname, email, username })}`);
+    log.info(`User ${uuid} requested profile update`);
+    log.debug(`Update data: ${JSON.stringify({ firstname, lastname, email, username })}`);
 
     try {
         await userService.updateUser(uuid, { firstname, lastname, email, username });
-        log.info(`Profile successfully updated for user with UUID: ${uuid}`);
+        log.info(`Profile updated successfully for user with UUID: ${uuid}`);
+        req.session.successMessage = 'Profile updated successfully.';
         res.redirect('/user');
     } catch (error) {
         log.error(`Error updating profile for UUID: ${uuid} - ${error.message}`);
-        res.status(500).send('Error updating profile: ' + error.message);
+        req.session.errorMessage = 'Error updating profile.';
+        res.redirect('/user');
     }
 }
 
-// Function to handle deletion of a user
+// Handle user deletion
 async function deleteUser(req, res) {
-    const { id } = req.params; // Get the UUID from URL parameters
+    const { id } = req.params;
+
+    log.info(`Delete user request for ID: ${id} by user ${req.session.user.username}`);
 
     try {
-        // Ensure the user has permission to delete the user
         const userToDelete = await userService.findUserByUUID(id);
         if (!userToDelete) {
+            log.warn(`User with ID ${id} not found for deletion`);
             req.session.errorMessage = `Error: Unable to find user with ID ${id}`;
             return res.redirect("/dashboard");
         }
 
         if (req.session.user.uuid !== userToDelete.uuid && !req.session.user.is_admin) {
-            req.session.errorMessage = `You do not have permission to delete this user`;
+            log.warn(`Unauthorized delete attempt on user ${id} by ${req.session.user.username}`);
+            req.session.errorMessage = `You do not have permission to delete this user.`;
             return res.redirect("/dashboard");
         }
 
-        // Delete the user
         await userService.deleteUser(id);
-        log.info(`User ${id} deleted by ${req.session.user.username}`);
-
-        req.session.successMessage = `User successfully deleted.`;
+        log.info(`User ${id} deleted successfully by ${req.session.user.username}`);
+        req.session.successMessage = 'User successfully deleted.';
         res.redirect('/dashboard');
     } catch (error) {
-        log.error('Error deleting user:', error);
-        req.session.errorMessage = `Internal server error.`;
+        log.error(`Error deleting user ${id} - ${error.message}`);
+        req.session.errorMessage = 'Internal server error during user deletion.';
         res.redirect("/dashboard");
     }
 }
-
 
 // Handle password change
 async function changePassword(req, res) {
     const { uuid } = req.session.user;
     const { newPassword } = req.body;
 
+    log.info(`Password change requested for UUID: ${uuid}`);
+
     try {
         await userService.updatePassword(uuid, newPassword);
+        log.info(`Password updated successfully for UUID: ${uuid}`);
         req.session.successMessage = 'Password successfully updated.';
         res.redirect('/user');
     } catch (error) {
@@ -108,5 +110,5 @@ module.exports = {
     showProfile,
     updateUser,
     deleteUser,
-    changePassword
+    changePassword,
 };

@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const authService = require('../services/authService');
 const User = require('../models/User');
-const { log } = require('../config/logger'); 
+const { log } = require('../config/logger');
 
 // Login Controller
 async function login(req, res) {
@@ -10,31 +10,34 @@ async function login(req, res) {
     try {
         // Determine if the identifier is an email or username
         const isEmail = /\S+@\S+\.\S+/.test(identifier);
-        log.info(`Login attempt for ${isEmail ? 'email' : 'username'}: ${identifier}`);
+        log.info(`Login attempt detected for ${isEmail ? 'email' : 'username'}: ${identifier}`);
 
         // Find user by either email or username
+        log.debug(`Searching user by ${isEmail ? 'email' : 'username'}: ${identifier}`);
         const user = await User.findOne({
             where: isEmail ? { email: identifier } : { username: identifier }
         });
 
         if (!user) {
-            log.warn(`Failed login attempt: No user found with identifier: ${identifier}`);
+            log.warn(`Login failed: No user found with identifier: ${identifier}`);
             return res.status(401).render('login', { errorMessage: 'Invalid login credentials' });
         }
 
         // Check if the password is correct
+        log.debug(`Checking password for user: ${user.username}`);
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
-            log.warn(`Failed login attempt: Incorrect password for user ${identifier}`);
+            log.warn(`Login failed: Incorrect password for user ${identifier}`);
             return res.status(401).render('login', { errorMessage: 'Invalid login credentials' });
         }
 
         // Log successful login
         log.info(`User ${user.username} logged in successfully`);
-
-        authService.setLastLogin(user.uuid)
+        log.debug(`Updating last login timestamp for user: ${user.uuid}`);
+        await authService.setLastLogin(user.uuid);
 
         // Set session data
+        log.debug(`Setting session data for user: ${user.username}`);
         req.session.user = {
             uuid: user.uuid,
             username: user.username,
@@ -45,16 +48,16 @@ async function login(req, res) {
         // Explicitly save the session (ensure session is persisted)
         req.session.save((err) => {
             if (err) {
-                log.error('Error saving session:', err);  // Log session save error
+                log.error('Error saving session:', err);
                 return res.status(500).render('login', { errorMessage: 'Error saving session' });
             }
             // After saving session, redirect to the dashboard
-            log.info(`Session saved for user ${user.username}`);
+            log.info(`Session successfully saved for user ${user.username}`);
             res.redirect('/dashboard');
         });
 
     } catch (error) {
-        log.error("Login error:", error);  // Log any errors during the login process
+        log.error('Login process encountered an error:', error);
         res.status(500).render('login', { errorMessage: 'Internal server error' });
     }
 }
@@ -63,18 +66,19 @@ async function login(req, res) {
 function logout(req, res) {
     // Log user logout attempt
     if (req.session.user) {
-        log.info(`User ${req.session.user.username} logged out`);
+        log.info(`User ${req.session.user.username} initiated logout`);
     } else {
         log.warn('Logout attempt without an active session');
     }
 
     // Destroy the session and log out the user
+    log.debug('Destroying session during logout');
     req.session.destroy((err) => {
         if (err) {
-            log.error('Error during logout session destruction:', err);  // Log logout errors
+            log.error('Error during session destruction on logout:', err);
             return res.status(500).render('login', { errorMessage: 'Failed to log out' });
         }
-        log.info('Session destroyed successfully');
+        log.info('Session successfully destroyed. User logged out');
         res.redirect('/login'); // Redirect to the login page after logout
     });
 }
