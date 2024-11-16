@@ -23,7 +23,44 @@ log.debug("Logger initialized.");
 
 // Middleware
 log.debug("Loading middlewares...");
-app.use(helmet());
+// Helmet configuration
+const helmetConfig = {
+  contentSecurityPolicy: {
+      directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+              "'self'", 
+              "https://unpkg.com", 
+              "https://cdnjs.cloudflare.com", 
+              "'unsafe-inline'"
+          ],
+          styleSrc: [
+              "'self'", 
+              "https://unpkg.com", 
+              "https://cdnjs.cloudflare.com", 
+              "'unsafe-inline'"
+          ],
+          imgSrc: [
+            "'self'", 
+            "data:", 
+            "https://a.tile.openstreetmap.org", 
+            "https://b.tile.openstreetmap.org", 
+            "https://c.tile.openstreetmap.org",
+            "https://unpkg.com"
+        ],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
+          objectSrc: ["'none'"],
+          upgradeInsecureRequests: []
+      }
+  },
+  // Problem is that leaflet loads data from openstreetmap and there is a header missing and I cant manipulate the dynamically loaded html tags (now)
+  crossOriginEmbedderPolicy: { policy: 'unsafe-none' },  // Relax the CORP policy: this is not ideal but does the trick for now
+  referrerPolicy: { policy: 'no-referrer' }
+};
+
+
+app.use(helmet(helmetConfig));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
