@@ -97,7 +97,11 @@ app.engine('handlebars', exphbs.engine({
       },
       formatDateTime: (date) => {
         return dayjs(date).format('YYYY-MM-DD HH:mm');
-      }
+      },
+      add: (a, b) => { a + b},
+      subtract: (a, b) => { a - b},
+      gt: (a, b) => { a > b},
+      lt: (a, b) => { a < b}
     }
     // helpers: require("./public/js/helpers.js").helpers
 }));
