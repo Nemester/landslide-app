@@ -49,33 +49,29 @@ landslide-app/
 │
 ├── config/
 │   ├── logger.js                   # Logging
+│   ├── serverInit.js               # Set up the server
+│   ├── viewEngine.js               # Set up handlebars
+│   ├── dbInit.js                   # Database initialization
 │   └── database.js                 # Database connection and Sequelize setup
 ├
 │── controllers/                    # Contains the controllers (logic)
-│   ├── adminController.js
-│   ├── authController.js
-│   ├── dashboardController.js
-│   ├── landslideController.js
-│   └── userControler.js
 │
 ├── docs/	                        # Documentation
 │
 ├── models/                         # Sequelize models
-│   ├── User.js
-│   ├── Landslide.js
-│   ├── Configuration.js
-│   └── Information.js
 │
 ├── public/                         # public assets / static files
 │
 ├── routes/                         # Route handlers
 │
-├── services/	                    # Services (model manipulations)
+├── services/	                     # Services (model manipulations)
+│
+├── utils/	                        # Some useful stuff
 │
 ├── views/                          # Handlebars views
 │
 ├── .env                            # Environment variables
-├── .gitignore		                # You should know what this is ;)
+├── .gitignore		                  # You should know what this is ;)
 ├── app.js                          # Main entry point for the app
 ├── package.json                    # You should also know what that is ;)
 └── README.md                       # This file
@@ -132,9 +128,11 @@ To make the app your own, adjust the following sections:
 
 ## Backlog
 
-- Improve security and add JWT signed token
-- Improve / Add logging
+- JWT signed token
+- Improve logging
 - Refactor Services/Controllers
+- Add pagination
+- Improve security (helmet config)
 
 ## Screenshots
 
@@ -151,5 +149,3 @@ To make the app your own, adjust the following sections:
 ![adminpanel-config](./docs/adminpanel-config.png)
 
 ---
-
-Thank you for using the Landslide App Template!
