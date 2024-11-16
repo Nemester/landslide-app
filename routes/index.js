@@ -4,12 +4,12 @@ const dashboardRoutes = require('./dashboardRoutes');
 const adminRoutes = require('./adminRoutes');
 const userRoutes = require('./userRoutes');
 const router = require('./router');
-
+const { isAuthenticated, isAdmin } = require('../middlewares/authMiddleware');
 module.exports = (app) => {
   app.use(authRoutes);
-  app.use('/landslide', landslideRoutes);
-  app.use('/dashboard', dashboardRoutes);
-  app.use('/user', userRoutes);
-  app.use('/admin', adminRoutes);
+  app.use('/landslide', isAuthenticated, landslideRoutes);
+  app.use('/dashboard', isAuthenticated, dashboardRoutes);
+  app.use('/user', isAuthenticated, userRoutes);
+  app.use('/admin', isAuthenticated, isAdmin, adminRoutes);
   app.use('/', router);
 };
