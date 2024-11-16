@@ -14,6 +14,7 @@ function handleError(error, res, customMessage) {
 // Render admin dashboard with configurations, users, and information list
 async function renderAdminPanel(req, res) {
     try {
+        const { user } = req.session;
         log.info(`User ${req.session.user.username} is accessing the admin dashboard`);
         log.debug('Fetching configurations, users, and information');
 
@@ -27,6 +28,7 @@ async function renderAdminPanel(req, res) {
         res.render('adminPanel', { 
             configurations, 
             users, 
+            user,
             information, 
             successMessage: req.session.successMessage, 
             errorMessage: req.session.errorMessage 
