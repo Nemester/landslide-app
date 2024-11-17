@@ -151,6 +151,12 @@ To make the app your own, adjust the following sections:
 ### Landslide map
 ![landslide-map](./docs/landslide-map.png)
 
+### Landslide details (user is not creater or admin)
+![landslide-details-noowner](./docs/landslide-details-noowner.png)
+
+### Landslide details (user is creater or admin)
+![landslide-details-owner](./docs/landslide-details-owner.png)
+
 ### Admin: Usermanagement
 ![adminpanel-usermanagement](./docs/adminpanel-usermanagement.png)
 
