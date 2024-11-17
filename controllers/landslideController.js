@@ -110,6 +110,8 @@ async function displaySingleLandslide(req, res) {
     const landslideId = req.params.id;
 
     try {
+        const { user } = req.session; // Destructure user from session
+
         log.debug(`Fetching landslide with ID: ${landslideId}`);
         const landslide = await landslideService.getLandslideById(landslideId);
 
@@ -119,11 +121,15 @@ async function displaySingleLandslide(req, res) {
         }
 
         const landslideData = landslide.get({ plain: true });
-        const canEdit = req.session.user &&
-            (req.session.user.id === landslideData.user_id || req.session.user.is_admin);
+        const canEdit = req.session.user && (user.uuid === landslideData.user_id || user.is_admin);
 
-        log.info(`User ${req.session.user.username} viewed landslide ${landslideData.uuid}`);
-        res.render('landslideDetail', { landslide: landslideData, canEdit });
+        log.info(`User ${req.session.user.username} viewed landslide ${landslideData.uuid} (editable: ${canEdit})`);
+        res.render('landslideDetail', 
+            { 
+                landslide: landslideData,
+                user, 
+                canEdit 
+            });
 
     } catch (error) {
         log.error(`Error fetching landslide ${landslideId}: ${error.message}`);

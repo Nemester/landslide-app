@@ -9,6 +9,7 @@ router.get('/add', landslideController.renderSubmitLandslide)
 // Route to handle landslide form submission
 router.post('/add', landslideController.submitLandslide);
 
+router.get('/view/:id', landslideController.displaySingleLandslide);
 router.get('/edit/:id', landslideController.displaySingleLandslide);
 router.post('/edit/:id', landslideController.updateLandslide);
 router.post('/delete/:id', landslideController.deleteLandslide);
