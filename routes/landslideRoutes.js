@@ -13,4 +13,6 @@ router.get('/edit/:id', landslideController.displaySingleLandslide);
 router.post('/edit/:id', landslideController.updateLandslide);
 router.post('/delete/:id', landslideController.deleteLandslide);
 
+router.get('/map', landslideController.renderLandslideMap)
+
 module.exports = router;

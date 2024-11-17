@@ -31,11 +31,33 @@ log4js.configure({
         type: 'pattern',
         pattern: logLayoutPattern
       }
+    },
+    consoleapi: {
+      type: 'console',
+      layout: {
+        type: 'pattern',
+        pattern: `%[[%d{yyyy-MM-dd hh:mm:ss}] [%p] - api -%] %m`
+      }
+    },
+    fileapi: {
+      type: 'file',
+      filename: LOGFILE,
+      maxLogSize: MAXLOGSIZE,
+      backups: LOGBACKUPS,
+      compress: LOGCOMPRESSION,
+      layout: {
+        type: 'pattern',
+        pattern: logLayoutPattern
+      }
     }
   },
   categories: {
     main: {
       appenders: ['console', 'file'],
+      level: LOGLEVEL
+    },
+    api: {
+      appenders: ['consoleapi', 'fileapi'],
       level: LOGLEVEL
     },
     web: {
@@ -51,6 +73,9 @@ log4js.configure({
 
 // System logger for events
 const log = log4js.getLogger('main');
+
+// System logger for events
+const apilog = log4js.getLogger('api');
 
 // Web logger for HTTP requests
 const weblogger = log4js.getLogger('web');
@@ -68,5 +93,6 @@ const setupLogging = (app) => {
 module.exports = {
   setupLogging,
   log,
+  apilog,
   applogger,
 };

@@ -1,0 +1,99 @@
+<h2 class="text-center mb-4">Switzerland Landslide Map</h2>
+
+<!-- Filter Form with better styling and vertical alignment -->
+<div class="row justify-content-center mb-4">
+    <form id="filterForm" class="col-12 col-md-6">
+        <div class="mb-3">
+            <!-- Start Date -->
+            <label for="startDate" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="startDate" />
+        </div>
+        <div class="mb-3">
+            <!-- End Date -->
+            <label for="endDate" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="endDate" />
+        </div>
+        <div class="text-center mt-3">
+            <button class="btn btn-primary" type="submit">Filter</button>
+        </div>
+    </form>
+</div>
+
+<!-- Map container -->
+<div id="map" style="height: 500px;"></div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const map = L.map('map').setView([46.8182, 8.2275], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const markerLayer = L.layerGroup().addTo(map);
+
+    const form = document.getElementById('filterForm');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        markerLayer.clearLayers();
+
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        const response = await fetch(`/api/landslides?startDate=${startDate}&endDate=${endDate}`);
+        const landslides = await response.json();
+
+        landslides.forEach(({ lat, lon, volume, uuid, description }) => {
+            const popupContent = `
+                <div id="popUpContent">
+                    <strong>Landslide ID:</strong> ${uuid}<br/>
+                    <strong>Volume:</strong> ${volume}<br/>
+                    <a href="/landslide/${uuid}">View Details</a>
+                </div>
+            `;
+
+            const marker = L.marker([lat, lon])
+                .addTo(markerLayer)
+                .bindPopup(popupContent);
+
+            // Add click event to redirect
+            marker.on('click', () => {
+                window.location.href = `/landslide/${uuid}`;
+            });
+
+            let popupOpen = false;
+
+            // Open popup on hover
+            marker.on('mouseover', () => {
+                marker.openPopup();
+                popupOpen = true;
+            });
+
+            // Close the popup with delay if the mouse leaves the marker or the popup content
+            marker.on('mouseout', (e) => {
+                console.log("mouseout marker")
+
+                if (!e.relatedTarget || !e.relatedTarget.closest('.leaflet-popup')) {
+                    setTimeout(() => {
+                        if (!popupOpen) {
+                            marker.closePopup();
+                        }
+                    }, 300);  // 300ms delay before closing
+                }
+            });
+            
+            // Close popup when the mouse leaves the popup content
+            marker.getPopup().on('mouseout', (e) => {
+                    if (!e.relatedTarget || !e.relatedTarget.closest('.leaflet-marker-icon')) {
+                        marker.closePopup();
+                    }
+            });
+
+            // Keep track of whether the popup is open to prevent immediate closure
+            marker.getPopup().on('mouseover', () => {
+                console.log("mouseout popup")
+
+                popupOpen = true;
+            });
+        });
+    });
+});
+
+</script>

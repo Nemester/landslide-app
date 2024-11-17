@@ -1,3 +1,4 @@
+const { Op } = require('sequelize'); // Import Sequelize operators
 const Landslide = require('../models/Landslide');
 
 // Helper function for geometry validation
@@ -99,6 +100,26 @@ async function countByUser(userUUID) {
     }
 }
 
+
+
+async function getLandslidesByDateRange(startDate, endDate) {
+    try {
+        const where = {};
+        if (startDate) {
+            where.date_occured = { [Op.gte]: new Date(startDate) };
+        }
+        if (endDate) {
+            where.date_occured = where.date_occured
+                ? { ...where.date_occured, [Op.lte]: new Date(endDate) }
+                : { [Op.lte]: new Date(endDate) };
+        }
+
+        return await Landslide.findAll({ where });
+    } catch (error) {
+        throw new Error('Error fetching landslides by date range: ' + error.message);
+    }
+}
+
 module.exports = {
     createLandslide,
     getAllLandslides,
@@ -106,5 +127,6 @@ module.exports = {
     getLandslideById,
     updateLandslide,
     deleteLandslide,
-    countByUser
+    countByUser,
+    getLandslidesByDateRange
 };

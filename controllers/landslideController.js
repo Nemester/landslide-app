@@ -1,5 +1,5 @@
 const landslideService = require('../services/landslideService');
-const { log } = require('../config/logger'); // Importing the logger
+const { log, apilog } = require('../config/logger'); // Importing the logger
 
 // Helper function for handling errors
 function handleError(res, errorMessage, status = 500) {
@@ -191,10 +191,36 @@ async function deleteLandslide(req, res) {
     }
 }
 
+async function renderLandslideMap(req, res) {
+    try {
+        const { user } = req.session; // Destructure user from session
+        res.render('map', { user })
+    } catch (error) {
+        log.error(`Error rendering map page: ${error.message}`);
+        handleError(res, 'Internal server error', 500);
+    }
+};
+
+
+async function api_getDataLandslideMap(req, res) {
+    const { startDate, endDate } = req.query;
+    try {
+        const landslides = await landslideService.getLandslidesByDateRange(startDate, endDate);
+        apilog.debug(`Loaded landslides with filter start date: ${startDate} until end date ${endDate}`)
+        apilog.debug(`Loaded landslides found ${landslides.length} landslides matching criteria`)
+        res.status(200).json(landslides);
+    } catch (error) {
+        apilog.error(`Error fetching landslides for map: ${error.message}`);
+        handleError(res, 'Internal server error', 500);
+    }
+};
+
 module.exports = {
     renderSubmitLandslide,
     submitLandslide,
     displaySingleLandslide,
     updateLandslide,
     deleteLandslide,
+    renderLandslideMap,
+    api_getDataLandslideMap
 };
