@@ -62,6 +62,11 @@ function calculateSurfaceAndCentroid(points) {
     return { area: Math.round(area), centroid: { lat: centralLat, lon: centralLon } };
 }
 
+async function renderSubmitLandslide(req, res) {
+    const { user } = req.session; // Destructure user from session
+    res.render('submitLandslide', { user }); // Assuming there's a 'submitLandslide.hbs' form
+}
+
 // Controller function to handle landslide form submission
 async function submitLandslide(req, res) {
     const { geometry, volume, depth, width, description, date_occured } = req.body;
@@ -187,6 +192,7 @@ async function deleteLandslide(req, res) {
 }
 
 module.exports = {
+    renderSubmitLandslide,
     submitLandslide,
     displaySingleLandslide,
     updateLandslide,

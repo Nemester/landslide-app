@@ -4,9 +4,7 @@ const router = express.Router();
 const landslideController = require('../controllers/landslideController');
 
 // Route to render the landslide submission form
-router.get('/add', (req, res) => {
-    res.render('submitLandslide'); // Assuming there's a 'submitLandslide.hbs' form
-});
+router.get('/add', landslideController.renderSubmitLandslide)
 
 // Route to handle landslide form submission
 router.post('/add', landslideController.submitLandslide);

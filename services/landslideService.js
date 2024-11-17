@@ -42,6 +42,15 @@ async function getAllLandslides() {
 }
 
 // Get a landslide by ID
+async function getLandslidesForUser(user_uuid) {
+    try {
+        return await Landslide.findAll({ where: { user_id: user_uuid }});
+    } catch (error) {
+        throw new Error('Error fetching landslide for user with uuid '+ user_uuid +': ' + error.message);
+    }
+}
+
+// Get a landslide by ID
 async function getLandslideById(id) {
     try {
         return await Landslide.findByPk(id);
@@ -93,6 +102,7 @@ async function countByUser(userUUID) {
 module.exports = {
     createLandslide,
     getAllLandslides,
+    getLandslidesForUser,
     getLandslideById,
     updateLandslide,
     deleteLandslide,
