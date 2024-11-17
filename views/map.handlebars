@@ -1,4 +1,4 @@
-<h2 class="text-center mb-4">Switzerland Landslide Map</h2>
+<h2 class="text-center mb-4">Landslide Map</h2>
 
 <!-- Filter Form with better styling and vertical alignment -->
 <div class="row justify-content-center mb-4">
@@ -21,30 +21,56 @@
 
 <!-- Map container -->
 <div id="map" style="height: 500px;"></div>
+
+<!-- Landslide count display -->
+<div id="landslideCount" class="text-center mt-3">
+    <strong>Number of landslides: <span id="landslideCountValue">0</span></strong>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // Set default date values for the filter
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+
+    // Get today's date and one month ago
+    const today = new Date();
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(today.getMonth() - 1);
+
+    // Format the dates to YYYY-MM-DD
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Add leading zero if needed
+        const day = String(date.getDate()).padStart(2, '0'); // Add leading zero if needed
+        return `${year}-${month}-${day}`;
+    };
+
+    // Set default values for start date and end date
+    startDateInput.value = formatDate(oneMonthAgo);
+    endDateInput.value = formatDate(today);
+
     const map = L.map('map').setView([46.8182, 8.2275], 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     const markerLayer = L.layerGroup().addTo(map);
 
-    const form = document.getElementById('filterForm');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        markerLayer.clearLayers();
-
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
+    // Function to load landslides based on date range
+    const loadLandslides = async (startDate, endDate) => {
+        markerLayer.clearLayers();  // Clear previous markers
 
         const response = await fetch(`/api/landslides?startDate=${startDate}&endDate=${endDate}`);
         const landslides = await response.json();
+
+        // Update the landslide count text
+        const landslideCount = landslides.length;
+        document.getElementById('landslideCountValue').textContent = landslideCount;
 
         landslides.forEach(({ lat, lon, volume, uuid, description }) => {
             const popupContent = `
                 <div id="popUpContent">
                     <strong>Landslide ID:</strong> ${uuid}<br/>
-                    <strong>Volume:</strong> ${volume}<br/>
+                    <strong>Volume:</strong> ${volume}m³<br/>
                     <a href="/landslide/${uuid}">View Details</a>
                 </div>
             `;
@@ -68,8 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Close the popup with delay if the mouse leaves the marker or the popup content
             marker.on('mouseout', (e) => {
-                console.log("mouseout marker")
-
                 if (!e.relatedTarget || !e.relatedTarget.closest('.leaflet-popup')) {
                     setTimeout(() => {
                         if (!popupOpen) {
@@ -88,12 +112,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Keep track of whether the popup is open to prevent immediate closure
             marker.getPopup().on('mouseover', () => {
-                console.log("mouseout popup")
-
                 popupOpen = true;
             });
         });
+    };
+
+    // Load landslides with the default date range
+    loadLandslides(startDateInput.value, endDateInput.value);
+
+    // Handle form submission to filter the landslides by selected date range
+    const form = document.getElementById('filterForm');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        loadLandslides(startDate, endDate); // Load landslides based on the selected date range
     });
 });
-
 </script>
