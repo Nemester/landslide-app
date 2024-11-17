@@ -32,11 +32,11 @@
                         {{#each configurations}}
                         <form action="/admin/configurations/update" method="POST">
                             <tr>
-                                <td>{{this.dataValues.name}}</td>
-                                <td>{{this.dataValues.category}}</td>
+                                <td>{{this.name}}</td>
+                                <td>{{this.category}}</td>
                                 <td>
-                                    <input type="hidden" name="uuid" value="{{this.dataValues.uuid}}">
-                                    <input type="text" name="value" class="form-control" value="{{this.dataValues.value}}">
+                                    <input type="hidden" name="uuid" value="{{this.uuid}}">
+                                    <input type="text" name="value" class="form-control" value="{{this.value}}">
                                 </td>
                                 <td class="text-end">
                                     <button type="submit" class="btn btn-primary">Update</button>

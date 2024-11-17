@@ -15,15 +15,16 @@ function handleError(error, res, customMessage) {
 async function renderAdminPanel(req, res) {
     try {
         const { user } = req.session;
+        // reload config
+        await configurationService.reloadConfiguration()
         log.info(`User ${req.session.user.username} is accessing the admin dashboard`);
         log.debug('Fetching configurations, users, and information');
 
         const [configurations, users, information] = await Promise.all([
-            configurationService.getAll(), 
+            configurationService.getAllConfigs(), 
             userService.getAll(),
             informationService.getAll()
         ]);
-
         log.debug('Fetched data successfully, rendering admin dashboard');
         res.render('adminPanel', { 
             configurations, 
@@ -71,9 +72,10 @@ async function updateInformation(req, res) {
 // Update configuration value
 async function updateConfiguration(req, res) {
     const { uuid, value } = req.body;
+    console.log(req.body)
     try {
         log.debug(`Fetching configuration with key: ${uuid}`);
-        const config = await configurationService.getConfigurationByKey(uuid);
+        const config = await configurationService.getConfigByUUID(uuid);
         if (!config) {
             log.warn(`Configuration with key '${uuid}' not found`);
             throw new Error('Configuration not found');
