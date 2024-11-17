@@ -142,11 +142,14 @@ To make the app your own, adjust the following sections:
 ### Submit new landslide
 ![submit-landslide](./docs/submit-landslide.png)
 
-### Uerdashboard (no landslides)
+### Userdashboard (no landslides)
 ![user-nolandslides](./docs/user-nolandslides.png)
 
-### Uerdashboard
+### Userdashboard
 ![user-landslides](./docs/user-landslides.png)
+
+### Landslide map
+![landslide-map](./docs/landslide-map.png)
 
 ### Admin: Usermanagement
 ![adminpanel-usermanagement](./docs/adminpanel-usermanagement.png)
