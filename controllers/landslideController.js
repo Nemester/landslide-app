@@ -206,8 +206,7 @@ async function api_getDataLandslideMap(req, res) {
     const { startDate, endDate } = req.query;
     try {
         const landslides = await landslideService.getLandslidesByDateRange(startDate, endDate);
-        apilog.debug(`Loaded landslides with filter start date: ${startDate} until end date ${endDate}`)
-        apilog.debug(`Loaded landslides found ${landslides.length} landslides matching criteria`)
+        apilog.debug(`Loaded landslides with filter start date: ${startDate} until end date ${endDate} (found ${landslides.length} matching datasets)`)
         res.status(200).json(landslides);
     } catch (error) {
         apilog.error(`Error fetching landslides for map: ${error.message}`);

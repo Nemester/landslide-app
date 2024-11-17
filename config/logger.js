@@ -10,6 +10,7 @@ const LOGCOMPRESSION = process.env.LOGCOMPRESSION === 'true';
 
 // Log layout pattern
 const logLayoutPattern = '[%d{yyyy-MM-dd hh:mm:ss}] [%p] - %m';
+const logLayoutPatternAPI = '%[[%d{yyyy-MM-dd hh:mm:ss}] [%p] - API -%] %m';
 
 // Configure log4js
 log4js.configure({
@@ -36,7 +37,7 @@ log4js.configure({
       type: 'console',
       layout: {
         type: 'pattern',
-        pattern: `%[[%d{yyyy-MM-dd hh:mm:ss}] [%p] - api -%] %m`
+        pattern: logLayoutPatternAPI
       }
     },
     fileapi: {
@@ -47,7 +48,7 @@ log4js.configure({
       compress: LOGCOMPRESSION,
       layout: {
         type: 'pattern',
-        pattern: logLayoutPattern
+        pattern: logLayoutPatternAPI
       }
     }
   },
