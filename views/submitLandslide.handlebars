@@ -1,84 +1,108 @@
 {{!-- submitLandslide.handlebars --}}
 <div class="container">
-<h2 class="text-center mb-4">Submit a Landslide Record</h2>
+    <h2 class="text-center mb-4">Submit a Landslide Record</h2>
 
-<div class="card mt-4">
-    <div class="card-body">
-    <form action="/landslide/add" method="POST">
-        <!-- Map for Drawing Landslide -->
-        <div class="mb-4">
-            <label for="map" class="form-label">Landslide Location</label>
-            <div id="map" style="height: 400px; width: 100%;"></div>
-            <input type="hidden" id="landslide-geometry" name="geometry" value="{{geometry}}">
+    <div class="card mt-4">
+        <div class="card-body">
+            <form action="/landslide/add" method="POST">
+                <!-- Map for Drawing Landslide -->
+                <div class="mb-4">
+                    <label for="map" class="form-label">Landslide Location</label>
+                    <div id="map" style="height: 400px; width: 100%;"></div>
+                    <input type="hidden" id="landslide-geometry" name="geometry" value="{{geometry}}">
+                </div>
+
+                <!-- Landslide Data Fields -->
+                <div class="mb-3">
+                    <label for="volume" class="form-label">Landslide Volume (cubic meters)</label>
+                    <input type="number" class="form-control" id="volume" name="volume" required placeholder="Enter volume" value="{{volume}}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="depth" class="form-label">Average Depth (meters)</label>
+                    <input type="number" class="form-control" id="depth" name="depth" required placeholder="Enter depth" value="{{depth}}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="width" class="form-label">Width (meters)</label>
+                    <input type="number" class="form-control" id="width" name="width" required placeholder="Enter width" value="{{width}}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="date_occured" class="form-label">Date Occurred</label>
+                    <input type="date" class="form-control" id="date_occured" name="date_occured" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="Describe the landslide...">{{description}}</textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary w-100">Submit Landslide Record</button>
+            </form>
         </div>
-
-        <!-- Landslide Data Fields -->
-        <div class="mb-3">
-            <label for="volume" class="form-label">Landslide Volume (cubic meters)</label>
-            <input type="number" class="form-control" id="volume" name="volume" required placeholder="Enter volume" value="{{volume}}">
-        </div>
-
-        <div class="mb-3">
-            <label for="depth" class="form-label">Average Depth (meters)</label>
-            <input type="number" class="form-control" id="depth" name="depth" required placeholder="Enter depth" value="{{depth}}">
-        </div>
-
-        <div class="mb-3">
-            <label for="width" class="form-label">Width (meters)</label>
-            <input type="number" class="form-control" id="width" name="width" required placeholder="Enter width" value="{{width}}">
-        </div>
-
-        <div class="mb-3">
-            <label for="date_occured" class="form-label">Date Occurred</label>
-            <input type="date" class="form-control" id="date_occured" name="date_occured" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Describe the landslide...">{{description}}</textarea>
-        </div>
-
-        <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary w-100">Submit Landslide Record</button>
-    </form>
     </div>
-</div>
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const map = L.map('map').setView([46.5962, 9.5986], 13); // Savognin, Switzerland
+        // Get the color value from the Handlebars template (this should be a valid color like #FF5733 or rgba(255, 0, 0, 0.5))
+        // Use fallback color if mapcolor.value is undefined or falsy
+        const mapColor = "{{mapcolor.value}}" || "#FF5733";  // Default color is #FF5733 if mapcolor.value is not defined
+
+        // Initialize the map with default center and zoom (Savognin, Switzerland)
+        const map = L.map('map').setView([46.5962, 9.5986], 13); 
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
+        // Create a feature group for the drawn items
         const drawnItems = new L.FeatureGroup();
         map.addLayer(drawnItems);
 
+        // Initialize the Leaflet draw control with the color setting applied to drawn items
         const drawControl = new L.Control.Draw({
             edit: {
                 featureGroup: drawnItems
             },
             draw: {
-                polygon: true,
+                polygon: {
+                    shapeOptions: {
+                        color: mapColor,  // Set the draw color for polygons
+                        weight: 4,
+                        opacity: 0.7,
+                        fillColor: mapColor,  // Set the fill color for polygons
+                        fillOpacity: 0.4
+                    }
+                },
                 polyline: false,
-                rectangle: true,
+                rectangle: {
+                    shapeOptions: {
+                        color: mapColor,  // Set the color for rectangles
+                        weight: 4,
+                        opacity: 0.7,
+                        fillColor: mapColor,
+                        fillOpacity: 0.4
+                    }
+                },
                 circle: false,
                 marker: false,
-                circlemarker: false
+                circlemarker: false,
             }
         });
         map.addControl(drawControl);
 
-        // If there's a geometry value from the server (in case of successful submission)
+        // If there's geometry data (from previous submission), show it on the map
         {{#if geometry}}
         const geoData = JSON.parse("{{geometry}}");
         const layer = L.geoJSON(geoData).addTo(drawnItems);
         map.fitBounds(layer.getBounds());
         {{/if}}
 
+        // Handle drawing events
         map.on(L.Draw.Event.CREATED, function (e) {
             const layer = e.layer;
 

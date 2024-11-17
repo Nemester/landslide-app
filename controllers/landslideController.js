@@ -1,4 +1,5 @@
 const landslideService = require('../services/landslideService');
+const configurationService = require('../services/configurationService');
 const { log, apilog } = require('../config/logger'); // Importing the logger
 
 // Helper function for handling errors
@@ -64,7 +65,7 @@ function calculateSurfaceAndCentroid(points) {
 
 async function renderSubmitLandslide(req, res) {
     const { user } = req.session; // Destructure user from session
-    res.render('submitLandslide', { user }); // Assuming there's a 'submitLandslide.hbs' form
+    res.render('submitLandslide', { user, mapcolor: configurationService.getConfigByName("mapcolor") }); // Assuming there's a 'submitLandslide.hbs' form
 }
 
 // Controller function to handle landslide form submission
@@ -114,7 +115,7 @@ async function displaySingleLandslide(req, res) {
 
         log.debug(`Fetching landslide with ID: ${landslideId}`);
         const landslide = await landslideService.getLandslideById(landslideId);
-
+        
         if (!landslide) {
             log.warn(`Landslide not found: ${landslideId}`);
             return handleError(res, 'Landslide not found', 404);
@@ -128,7 +129,8 @@ async function displaySingleLandslide(req, res) {
             { 
                 landslide: landslideData,
                 user, 
-                canEdit 
+                canEdit,
+                mapcolor: configurationService.getConfigByName("mapcolor")
             });
 
     } catch (error) {

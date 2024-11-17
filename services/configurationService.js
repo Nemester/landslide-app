@@ -37,7 +37,7 @@ function getConfigByUUID(uuid) {
 // Function to access a configuration by its value
 function getConfigByName(name) {
   // Iterate through the configCache to find matching name(s)
-  for (const [name, config] of Object.entries(configCache)) {
+  for (const [uuid, config] of Object.entries(configCache)) {
       if (config.name === name) {
           return { uuid, ...config }; // Return the name and configuration details
       }

@@ -1,7 +1,7 @@
 {{!-- src/views/landslideEdit.handlebars --}}
 {{#if landslide}}
     <div class="container">
-        <h2 class="text-center mb-4">Landslide Details</h2>
+        <h2 class="text-center mb-4">Landslide Details {{mapcolor.value}}</h2>
 
         {{#if canEdit}}
             <!-- Editable Landslide Form (Editable for Admin or Creator) -->
@@ -74,6 +74,9 @@
 
         <script>
             document.addEventListener("DOMContentLoaded", function() {
+                // Get the color value from the Handlebars template (this should be a valid color like #FF5733 or rgba(255, 0, 0, 0.5))
+                const mapColor = "{{mapcolor.value}}"  || "#FF5733";; // Color defined in the template
+
                 // Parse the serialized geometry string into a GeoJSON object
                 const landslideGeometry = {{{landslide.geometry}}};  // Ensure it's valid JSON
 
@@ -86,10 +89,20 @@
                     attribution: '© OpenStreetMap contributors'
                 }).addTo(map);
 
+                // Function to style the GeoJSON layer with the map color
+                function geoJsonStyle() {
+                    return {
+                        color: mapColor,   // Use the color from the template
+                        weight: 3,
+                        opacity: 1,
+                        fillOpacity: 0.4
+                    };
+                }
+
                 // Initialize the GeoJSON layer if geometry exists
                 let geoJsonLayer;
                 if (landslideGeometry && landslideGeometry.type === 'Feature' && landslideGeometry.geometry) {
-                    geoJsonLayer = L.geoJSON(landslideGeometry).addTo(map);
+                    geoJsonLayer = L.geoJSON(landslideGeometry, { style: geoJsonStyle }).addTo(map);
                     map.fitBounds(geoJsonLayer.getBounds());
                 }
 
